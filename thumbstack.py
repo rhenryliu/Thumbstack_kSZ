@@ -727,19 +727,18 @@ class ThumbStack(object):
       #result = np.array(map(self.analyzeObject, range(self.Catalog.nObj)))
       tStart = time()
       jump = 25000000
+      # TESTING
       start = 0
-      stop = jump
+      #start = jump
+      stop = start + jump # it's gonna be updates, so not sure how to exit
       if stop >= self.Catalog.nObj:
          ending = ""
       else:
          ending = f"_start{start:d}_{stop:d}"
-      # TESTING!!!!!!!!
-      #start += jump
-      #stop += jump
       while start < self.Catalog.nObj:
          if stop > self.Catalog.nObj:
             stop = self.Catalog.nObj
-         if ending != "":
+         if ending != "": # could rethink this bc if you're doing in parts and that's the last part you might end up not getting an ending but if it's more than one iteration then you do get it
             ending = f"_start{start:d}_{stop:d}"
             
          with sharedmem.MapReduce(np=nProc) as pool:
@@ -770,7 +769,7 @@ class ThumbStack(object):
                cat['filtArea'] = filtArea
                del filtArea; gc.collect()
                cat = Table(cat)
-               cat.write(self.pathOut+"/"+filterType+f"_filtall{ending}.fits")
+               cat.write(self.pathOut+"/"+filterType+f"_filtall{ending}.fits", overwrite=True)
                del cat
             else:
                np.savetxt(self.pathOut+"/"+filterType+f"_filtmap{ending}.txt", filtMap)
@@ -778,6 +777,8 @@ class ThumbStack(object):
                np.savetxt(self.pathOut+"/"+filterType+f"_filtnoisestddev{ending}.txt", filtHitNoiseStdDev)
                np.savetxt(self.pathOut+"/"+filterType+f"_filtarea{ending}.txt", filtArea)
 
+         # !!!!! TESTING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! tuksi
+         #if start == 0: break
          start += jump
          stop += jump
          del result

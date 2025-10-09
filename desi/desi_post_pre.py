@@ -7,27 +7,73 @@ import pandas as pd
 from cosmoprimo.fiducial import Planck2018FullFlatLCDM, AbacusSummit, DESI, TabulatedDESI
 
 # Tracer type
-#tracer = "LRG" # og
-tracer = "BGS_BRIGHT-21.5" #
+#tracer = "BGS_BRIGHT-21.5" # not used
+#tracer = "BGS_BRIGHT-21.35" # not used
+#tracer = "BGS_BRIGHT-20.2" #
+#tracer = "QSO" # not used
+#tracer = "ELG_LOPnotqso" #
+tracer = "LRG" #
 
+want_y1 = True
+if want_y1:
+    extra_str = "_Y1"
+else:
+    extra_str = ""
 
 # Importing catalogs
-main_directory = '/global/cfs/cdirs/desi/survey/catalogs/Y1/LSS/iron/LSScats/v1/unblinded/'
-post_rec_directory = "desipipe/baseline_2pt/recon_recsym/"
+if want_y1:
+    main_directory = '/global/cfs/cdirs/desi/survey/catalogs/Y1/LSS/iron/LSScats/v1/unblinded/' # Y1
+else:
+    main_directory = '/global/cfs/cdirs/desi/survey/catalogs/Y3/LSS/loa-v1/LSScats/v1.1/nonKP/' # Y3
+
+if want_y1:
+    post_rec_directory = main_directory+"desipipe/baseline_2pt/recon_recsym/" # Y1
+else:
+    if tracer == "QSO":
+        post_rec_directory = "/global/cfs/cdirs/desi/survey/catalogs/Y3/analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm30_IFFT_recsym_z0.8-2.1/" # Y3
+    elif tracer == "BGS_BRIGHT-21.5":
+        post_rec_directory = "/global/cfs/cdirs/desi/survey/catalogs/Y3/analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/" # Y3
+    elif tracer == "BGS_BRIGHT-21.35" or tracer == "BGS_BRIGHT-20.2":
+        #post_rec_directory = "/global/cfs/cdirs/desi/survey/catalogs/Y3/analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/" # Y3
+        post_rec_directory = "/pscratch/sd/e/epaillas/tmp/" # Y3
+    elif tracer == "ELG_LOPnotqso":
+        post_rec_directory = "/global/cfs/cdirs/desi/survey/catalogs/Y3/analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/" # Y3
+    elif tracer == "LRG":
+        post_rec_directory = "/global/cfs/cdirs/desi/survey/catalogs/Y3/analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/" # Y3
 
 # North Galactic Center:
 pre_rec_NGC = Table.read(main_directory+f'{tracer}_NGC_clustering.dat.fits', format='fits')
 #pre_rec_NGC = pre_rec_NGC.to_pandas()
 
-post_rec_NGC = Table.read(main_directory+post_rec_directory+f'{tracer}_NGC_clustering.dat.fits', format='fits')
+post_rec_NGC = Table.read(post_rec_directory+f'{tracer}_NGC_clustering.dat.fits', format='fits')
+#post_rec_NGC = Table.read(post_rec_directory+f'{tracer}_NGC_clustering.IFTrecsym.dat.fits', format='fits') # enrique TESTING
 #post_rec_NGC = post_rec_NGC.to_pandas()
 
 # South Galactic Center:
 pre_rec_SGC = Table.read(main_directory+f'{tracer}_SGC_clustering.dat.fits', format='fits')
 #pre_rec_SGC = pre_rec_SGC.to_pandas()
 
-post_rec_SGC = Table.read(main_directory+post_rec_directory+f'{tracer}_SGC_clustering.dat.fits', format='fits')
+post_rec_SGC = Table.read(post_rec_directory+f'{tracer}_SGC_clustering.dat.fits', format='fits')
+#post_rec_SGC = Table.read(post_rec_directory+f'{tracer}_SGC_clustering.IFTrecsym.dat.fits', format='fits') # enrique TESTING
 #post_rec_SGC = post_rec_SGC.to_pandas()
+
+if len(pre_rec_NGC) != len(post_rec_NGC):
+    print("NGC: numbers aren't matching", len(pre_rec_NGC), len(post_rec_NGC))
+    from tools.match_searchsorted import match
+
+    ptr = match(np.asarray(pre_rec_NGC['TARGETID']).astype(np.int64), np.asarray(post_rec_NGC['TARGETID']).astype(np.int64))
+    assert np.sum(ptr > -1) == len(post_rec_NGC), f"{np.sum(ptr > -1):d}, {len(post_rec_NGC):d}"
+    pre_rec_NGC = pre_rec_NGC[ptr > -1]
+    post_rec_NGC = post_rec_NGC[ptr[ptr > -1]]
+
+if len(pre_rec_SGC) != len(post_rec_SGC):
+    print("SGC: numbers aren't matching", len(pre_rec_SGC), len(post_rec_SGC))
+    from tools.match_searchsorted import match
+
+    ptr = match(np.asarray(pre_rec_SGC['TARGETID']).astype(np.int64), np.asarray(post_rec_SGC['TARGETID']).astype(np.int64))
+    assert np.sum(ptr > -1) == len(post_rec_SGC), f"{np.sum(ptr > -1):d}, {len(post_rec_SGC):d}"
+    pre_rec_SGC = pre_rec_SGC[ptr > -1]
+    post_rec_SGC = post_rec_SGC[ptr[ptr > -1]]
 
 # Numbers are low!
 print("post pre NGC", len(post_rec_NGC), len(pre_rec_NGC))
@@ -122,9 +168,11 @@ pre_rec_NGC["VEL_ACROSS"] = vel_NGC_ACROSS
 vel_SGC_ACROSS = a_SGC * H_z_SGC * ff_SGC * disp_SGC_ACROSS
 pre_rec_SGC["VEL_ACROSS"] = vel_SGC_ACROSS
 
+print(pre_rec_SGC['Z'].min(), pre_rec_SGC['Z'].max())
+print(pre_rec_NGC['Z'].min(), pre_rec_NGC['Z'].max())
 
-pre_rec_NGC.write(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_NGC.fits", overwrite=False)
-pre_rec_SGC.write(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_SGC.fits", overwrite=False)
+pre_rec_NGC.write(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}{extra_str}_NGC.fits", overwrite=True)
+pre_rec_SGC.write(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}{extra_str}_SGC.fits", overwrite=True)
 
 #pre_rec_NGC.write(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_NGC_z0.08-0.7_logM11.dat.fits", overwrite=False)
 #pre_rec_SGC.write(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_SGC_z0.08-0.7_logM11.dat.fits", overwrite=False)

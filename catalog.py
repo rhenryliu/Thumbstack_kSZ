@@ -300,7 +300,7 @@ class Catalog(object):
 
 
    def loadCatalog(self, nObj=None):
-      self.want_fits = False # B.H.
+      self.want_fits = True # B.H.
       
       if type(self.pathOutCatalog) == list:
          for i, path in enumerate(self.pathOutCatalog):
@@ -316,14 +316,33 @@ class Catalog(object):
             self.want_fits = True
             data = Table(fitsio.read(self.pathOutCatalog))
             self.nObj = len(data)
-            self.RA = data['RA']
-            self.DEC = data['DEC']
-            self.Z = data['Z']
-            self.vX = np.empty(self.nObj)
-            self.vY = np.empty(self.nObj)
-            self.vZ = data['vZ']
-            self.Mvir = 10.**(data['LOGM']+2.)
-            self.vR = np.empty(self.nObj)
+            # TESTINGG!!!!!!!!
+            self.RA = data['RA']# + 20.*np.random.rand(len(data))
+            self.DEC = data['DEC']# + 20.*np.random.rand(len(data))
+            try:
+               self.Z = data['Z']
+            except:
+               self.Z = np.empty(self.nObj)
+            try:
+               self.vX = data['ca']
+            except:
+               self.vX = np.empty(self.nObj) # ANGLES!!!!!!!!!! ca
+            try:
+               self.vY = data['sa']
+            except:
+               self.vY = np.empty(self.nObj) # ANGLES!!!! sa
+            try:
+               self.vZ = data['vZ'] # sign of temperature map
+            except:
+               self.vZ = np.empty(self.nObj)
+            try:
+               self.Mvir = 10.**(data['LOGM']+2.)
+            except:
+               self.Mvir = np.empty(self.nObj)
+            try:
+               self.vR = data['vR']
+            except:
+               self.vR = np.empty(self.nObj)
             self.integratedKSZ = np.empty(self.nObj)
             self.integratedY = np.empty(self.nObj)
             return

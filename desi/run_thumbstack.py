@@ -44,6 +44,10 @@ python run_thumbstack.py 1 0 main dr9
 python run_thumbstack.py 1 0 extended dr10
 python run_thumbstack.py 1 0 main dr10
 
+python run_thumbstack.py 1 0 lrg na # not applicable
+python run_thumbstack.py 1 0 elg na # not applicable
+python run_thumbstack.py 1 0 qso na # not applicable
+python run_thumbstack.py 1 0 bgs na # not applicable
 python run_thumbstack.py 1 0 bgs na f090 # not applicable
 python run_thumbstack.py 1 0 bgs na f150 # not applicable
 python run_thumbstack.py 1 0 bgs_lrg_elg_qso na # not applicable
@@ -62,6 +66,9 @@ python run_thumbstack.py 1 0 halos lensed_abacus_fwhm1.6
 python run_thumbstack.py 1 0 halos lensed_tau_abacus_fwhm1.6
 python run_thumbstack.py 1 0 halos unlensed_tau_abacus_fwhm1.6
 python run_thumbstack.py 1 0 halos tau_abacus_fwhm1.6
+
+python run_thumbstack.py 1 0 halos lensed_abacus_fwhm1.6_half_small_large_small
+python run_thumbstack.py 1 0 halos lensed_tau_abacus_fwhm1.6_half_small_large_small
 
 python run_thumbstack.py 1 0 halos lensed_abacus_fwhm2.1
 python run_thumbstack.py 1 0 halos unlensed_tau_abacus_fwhm2.1
@@ -122,8 +129,12 @@ elif version == "dr6":
             #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/maps/baseline/kappa_alm_data_act_dr6_lensing_v1_baseline_masked.fits" # TESTING
             #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/maps/baseline/kappa_alm_data_act_dr6_lensing_v1_baseline_masked_tau_screening.fits" # TESTING
     else:
-        #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000.fits" # 1.6 arcmin # OG
-        pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING
+        pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000.fits" # 1.6 arcmin # OG
+        #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING # TESTING!!!!!!!!!!!!!!!!!!!!!!!!! tuksi!!! og
+        #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f150_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING # TESTING!!!!!!!!!!!!!!!!!!!!!!!!! tuksi!!! og
+        #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f090_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING # TESTING!!!!!!!!!!!!!!!!!!!!!!!!! tuksi!!! og
+        #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f090-f150_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING # TESTING!!!!!!!!!!!!!!!!!!!!!!!!! tuksi!!! og
+        #pathMap = "/pscratch/sd/b/boryanah/websky/abacus/unlensed_map_8192_fwhm1.4_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING # TESTING!!!!!!!!!!!!!!!!!!!!!!!!! tuksi!!! new
         #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_half_small_large_small_tau_screening.fits" # 1.6 arcmin # TESTING
         #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000_small_large_tau_screening.fits" # 1.6 arcmin # TESTING
         #pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_actplanck_ymap.fits" # 1.6 arcmin # TESTING
@@ -149,10 +160,12 @@ elif version == "websky":
         if "tau_abacus_fwhm" in sys.argv[4] and "noise15.0" in sys.argv[4]:
             map_str = f"_tau_8192_ph201_fwhm{fwhm:.1f}_noise15.0"
         elif "tau_abacus_fwhm" in sys.argv[4]:
+            print("should be here")
             map_str = f"_tau_8192_ph201_fwhm{fwhm:.1f}"
         elif "fwhm" in sys.argv[4] and "noise15.0" in sys.argv[4]:
             map_str = f"_8192_ph201_fwhm{fwhm:.1f}_noise15.0"
         elif "fwhm" in sys.argv[4]:
+            print("but maybe we are here")
             map_str = f"_8192_ph201_fwhm{fwhm:.1f}"
         elif "tau" in sys.argv[4]:
             map_str = "_tau_8192_ph201"
@@ -170,7 +183,10 @@ elif version == "websky":
     if "unlensed" in sys.argv[4]:
         pathMap = f'{map_dir}/unlensed_map{map_str}_small_tau_screening.fits'
     elif "lensed" in sys.argv[4]:
-        if "small_large" in sys.argv[4]:
+        if "half_small_large_small" in sys.argv[4]:
+            pathMap = f'{map_dir}/lensed_map{map_str}_half_small_large_small_tau_screening.fits'
+            version_str += "_half_small_large_small"
+        elif "small_large" in sys.argv[4]:
             pathMap = f'{map_dir}/lensed_map{map_str}_small_large_tau_screening.fits'
             version_str += "_small_large"
         else:
@@ -260,6 +276,10 @@ elif cat_dr == "tau_abacus":
     cat_dr_str = "_tau_abacus"
 elif cat_dr == "lensed_tau_abacus_fwhm1.6":
     cat_dr_str = "_lensed_tau_abacus_fwhm1.6"
+elif cat_dr == "lensed_abacus_fwhm1.6_half_small_large_small":
+    cat_dr_str = "_lensed_abacus_fwhm1.6"
+elif cat_dr == "lensed_tau_abacus_fwhm1.6_half_small_large_small":
+    cat_dr_str = "_lensed_tau_abacus_fwhm1.6"
 elif cat_dr == "unlensed_tau_abacus_fwhm1.6":
     cat_dr_str = "_unlensed_tau_abacus_fwhm1.6"
 elif cat_dr == "unlensed_tau_abacus_fwhm2.1":
@@ -311,20 +331,28 @@ if cat_type == "main":
 elif cat_type == "extended":
     cat_fn = f"extended_catalog{mix_str}{cat_dr_str}{cat_foot_str}{recon_bin_str}{sigmaz_str}{only_str}{random_str}{freq_str}.txt" 
 elif cat_type == "bgs":
-    #cat_fn = f"BGS_BRIGHT-21.5.txt" # spec # i think smolest? # TESTING just cause fast
+    cat_fn = f"BGS_BRIGHT-21.5.txt" # spec # i think smolest? # TESTING just cause fast
     #cat_fn = f"BGS_BRIGHT.txt" # new
     #cat_fn = f"BGS_BRIGHT_pz.txt" # newest0
-    cat_fn = f"BGS_BRIGHT_pz_logm10.5{random_str}{smooth_str}.txt" # newestest DEFAULT og
+    #cat_fn = f"BGS_BRIGHT_pz_logm10.5{random_str}{smooth_str}.txt" # newestest DEFAULT og
     tracer = cat_fn.split(".txt")[0]
+elif cat_type == "qso":
+    cat_fn = f"QSO.txt" # spec # i think smolest? # TESTING just cause fast
+elif cat_type == "lrg":
+    cat_fn = f"LRG.txt" # spec # i think smolest? # TESTING just cause fast
+elif cat_type == "elg":
+    cat_fn = f"ELG_LOPnotqso.txt" # spec # i think smolest? # TESTING just cause fast
 elif cat_type == "bgs_lrg_elg_qso":
     cat_fn = f"BGS_LRG_ELG_QSO.txt"
 elif cat_type == "des_y6":
+    #perc = 30
     perc = 10
     cat_fn = f"DESY6_ABSM{perc:d}.fits"
+    smooth_str = f"_absm{perc:d}"
     cat_dr_str = "_des_y6"
 elif cat_type == "LS":
-    LOGM_MIN = 10.5
-    PHOTO_ERR = 0.1
+    LOGM_MIN = 10.4 #10.5
+    PHOTO_ERR = 0.035 #0.1
     cat_fn = f"sweep_LOGM{LOGM_MIN:.1f}_PHOTOZ{PHOTO_ERR:.1f}.fits"
     cat_dr_str = "_LS"
 elif cat_type == "halos":
@@ -371,13 +399,34 @@ tStart = time()
 cat_dir = '/pscratch/sd/b/boryanah/ACTxDESI/DESI/'
 if cat_type == "bgs":
     output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output{version_str_bgs}_{tracer}{filter_str}{lensing_str}{screening_str}{smooth_str}/thumbstack/"
+elif cat_type == "qso":
+    output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_qso{filter_str}{lensing_str}{screening_str}{smooth_str}/thumbstack/"
+elif cat_type == "lrg":
+    output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_lrg{filter_str}{lensing_str}{screening_str}{smooth_str}/thumbstack/"
+elif cat_type == "elg":
+    output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_elg{filter_str}{lensing_str}{screening_str}{smooth_str}/thumbstack/"
 else:
     if "extended" in cat_fn:
         output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_extended{mix_str}{cat_dr_str}{cat_foot_str}{recon_bin_str}{sigmaz_str}{only_str}{random_str}{vshuff_str}{version_str}{mask_str}{filter_str}{lensing_str}{screening_str}{smooth_str}/thumbstack/"
     else:
         output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output{mix_str}{cat_dr_str}{cat_foot_str}{recon_bin_str}{sigmaz_str}{only_str}{random_str}{vshuff_str}{version_str}{mask_str}{filter_str}{lensing_str}{screening_str}{smooth_str}/thumbstack/"
 
+print(output_dir)
+
+        
 if cat_type == "bgs":
+    catalogs = {
+        "DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+    }
+elif cat_type == "qso":
+    catalogs = {
+        "DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+    }
+elif cat_type == "elg":
+    catalogs = {
+        "DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+    }
+elif cat_type == "lrg":
     catalogs = {
         "DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn),
     }
@@ -483,7 +532,7 @@ for key in list(catalogKeys):
     for i, cmap in enumerate(cmbMap_list):
     
         ts = ThumbStack(u, catalog, 
-                        cmap.map(),  # tuksi
+                        cmap.map(),
                         #cmb_maps,  # TESTING!!!! filter
                         cmap.mask(), 
                         cmap.hit(), 

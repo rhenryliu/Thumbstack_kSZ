@@ -33,22 +33,25 @@ from visualize_recon import calc_velocity
 # params
 desi_dir = Path("/pscratch/sd/b/boryanah/ACTxDESI/DESI/")
 #tracer = "BGS_BRIGHT-21.5" # og
-tracer = "BGS_BRIGHT" # new
+#tracer = "BGS_BRIGHT" # new
+#tracer = "QSO" # newest
+#tracer = "ELG_LOPnotqso" # newest
+tracer = "LRG" # newest
 pz_bin = 1
 save_fn = f"{tracer}.txt"
-#cat_NGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_NGC.fits", format='fits') # og
-#cat_SGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_SGC.fits", format='fits') # og
-cat_NGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_NGC_logM11.0.fits", format='fits') # new
-cat_SGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_SGC_logM11.0.fits", format='fits') # new
+cat_NGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_NGC.fits", format='fits') # og
+cat_SGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_SGC.fits", format='fits') # og
+#cat_NGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_NGC_logM11.0.fits", format='fits') # new
+#cat_SGC = Table.read(f"/pscratch/sd/b/boryanah/kSZ_pairwise/{tracer}_SGC_logM11.0.fits", format='fits') # new
 
 cat = vstack((cat_NGC, cat_SGC))
 
 # TESTING trying to see if it helps with first 2 bins -- not really
-choice = cat['Z'] > 0.08
-    cat = cat[choice]
+#choice = cat['Z'] > 0.08
+#cat = cat[choice]
 
 # a bit weird
-cat.remove_column('BITWEIGHTS')
+#cat.remove_column('BITWEIGHTS')
 
 # Converting to Pandas and rename the columns
 print(cat.keys())

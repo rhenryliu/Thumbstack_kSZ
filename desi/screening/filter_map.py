@@ -34,8 +34,11 @@ elif typ == "dr5_f090":
     #pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/act_planck_dr5.01_s08s18_AA_f090_night_map_srcfree.fits' # DR5 f090
     pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/act_planck_dr5.01_s08s18_AA_f090_night_map_srcfree_masked_rebeamed_f150.fits' # DR5 f090
 else:
-    pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000.fits' # DR6 ILC
+    #pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000.fits' # DR6 ILC
     #pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT.fits' # DR6 ILC
+    #pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f150.fits' # DR6 ILC
+    #pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f090.fits' # DR6 ILC
+    pathMap = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f090-f150.fits' # DR6 ILC
 #pathMap = '/pscratch/sd/b/boryanah/websky/unlensed_map.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/lensed_map.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_4096_ph201.fits'
@@ -44,14 +47,14 @@ else:
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_tau_8192_ph201.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/unlensed_map_tau_8192_ph201.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/map_tau_8192_ph201.fits'
-#pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_fwhm1.6.fits'
+#pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_fwhm1.6.fits' #
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_fwhm2.1.fits'
-#pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_fwhm1.4.fits' #
+#pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_fwhm1.4.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/unlensed_map_8192_fwhm1.4.fits' #
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_order1_fwhm1.4.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_8192_ph201_order1_brute_fwhm1.4.fits' 
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/map_tau_8192_ph201_fwhm1.6.fits' 
-#pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_tau_8192_ph201_fwhm1.6.fits' 
+#pathMap = '/pscratch/sd/b/boryanah/websky/abacus/lensed_map_tau_8192_ph201_fwhm1.6.fits' #
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/unlensed_map_tau_8192_ph201_fwhm1.6.fits' 
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/unlensed_map_tau_8192_ph201_fwhm2.1.fits'
 #pathMap = '/pscratch/sd/b/boryanah/websky/abacus/unlensed_map_tau_8192_ph201_fwhm1.4.fits'
@@ -67,10 +70,23 @@ eshow(ACT_map_sm, pathMap.split(".fits")[0]+"_small_tau_screening", **{"colorbar
 quit()
 """
 
+#L_cut = 2000. # og
+#L_jump = 500. # og
+#L_width = 150. # og
+L_cut = 1700.
+L_jump = 300.
+L_width = 100.
+factor = 1. # 1 is the OG; 2 is the new one (when multiply is True, should be 1; first run should have multiply False and factor = 2)
+L_cut /= factor
+L_jump /= factor
+L_width /= factor
+
 want_multiply = True
 if want_multiply:
     ACT_map_sm = enmap.read_map(pathMap.split(".fits")[0]+"_small_tau_screening.fits")
     ACT_map_lg = enmap.read_map(pathMap.split(".fits")[0]+"_large_tau_screening.fits")
+    # TESTING!!!!!!!!!!! # for the minus
+    #ACT_map_lg = enmap.read_map("/pscratch/sd/b/boryanah/ACTxDESI/ACT/ilc_fullRes_TT_smallScale_f090_large_tau_screening.fits")
     #enmap.write_map(pathMap.split(".fits")[0]+"_small_large_tau_screening.fits", ACT_map_sm * np.sign(ACT_map_lg))
     #quit()
     
@@ -105,16 +121,6 @@ del ACT_map
 gc.collect()
 
 # load ells for filter
-#L_cut = 2000. # og
-#L_jump = 500. # og
-#L_width = 150. # og
-L_cut = 1700.
-L_jump = 300.
-L_width = 100.
-factor = 1. # 1 is the OG; 2 is the new one (when multiply is True, should be 1; first run should have multiply False and factor = 2)
-L_cut /= factor
-L_jump /= factor
-L_width /= factor
 ell_ksz = np.arange(10001)
 flg_ksz = np.zeros(len(ell_ksz))
 flg_ksz[ell_ksz < L_cut] = 1.
