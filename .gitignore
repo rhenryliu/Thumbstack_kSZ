@@ -7,11 +7,15 @@
 *.pdf
 *.txt
 *.swp
-*.ipynb
 *.png
 *~
 *bak
 *.npy
+*.sh
+*.pyc
+*.pyo
+*.pyd
+.env
 
 # directories to exclude
 output/
@@ -23,3 +27,6 @@ log/
 .ipynb_checkpoints/
 core
 .git_old/
+.vscode/
+Outputs_Perlmutter/
+__pycache__/
