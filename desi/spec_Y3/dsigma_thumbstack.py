@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('/global/homes/b/boryanah/repos/ThumbStack')
+sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack')
 
 from importlib import reload
 import universe
@@ -25,6 +25,9 @@ from cmb import *
 from cmbMap import *
 import matplotlib as mpl
 mpl.rcParams.update(mpl.rcParamsDefault)
+import json
+
+param_Dict = json.loads(sys.argv[1])
 
 ##################################################################################
 
@@ -39,16 +42,31 @@ if want_sim:
     cat_fn = "halos_LOGMhalo_Msunh13_masked.fits"
 else:
     #cat_dir = "/global/cfs/cdirs/desi/users/boryanah/reconstruction_DESI/recon/"
-    #cat_dir = '/pscratch/sd/b/boryanah/ACTxDESI/DESI/'
-    cat_dir = '/pscratch/sd/b/boryanah/kSZ_pairwise/'
+    # cat_dir = '/pscratch/sd/b/boryanah/ACTxDESI/DESI/' # Boryana's SPEC Y1 data
+    cat_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/' # Frank's SPEC Y3 data
+    fig_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+    # cat_dir = '/pscratch/sd/b/boryanah/kSZ_pairwise/'
+    # cat_dir = '/global/cfs/cdirs/desi/users/boryanah/kSZ_recon/for_fiona/velocities_dr9_extended_lrg_pzbins-dr10_pz_dr10_extended_randoms-1-0-2_remov_isle_nobs1_ebv0.15_stardens2500_lrg_mask_sigmaz0.0500_R12.50_nmesh512_recsym_MG{_bin_1,_bin_2,_bin_3,_bin_4,}_{s,n}gc.npz'
     #perc = 30
     perc = 10
     #cat_fn = "catalog_BGS_BRIGHT-20.2_R12.50_nmesh512_recsym_MG_masked.fits"
     #cat_fn = f"DESY6_ABSM{perc:d}.fits"
     #cat_fn = "ELG_LOPnotqso_masked.fits"
     #cat_fn = "ELG_LOPnotqso_cigale_masked.fits"
-    #cat_fn = "LRG_cigale_masked.fits"
-    cat_fn = "LRG_Y1_cigale_masked.fits"
+    # cat_fn = "LRG_cigale_masked.fits"
+    # cat_fn = "LRG_Y1_cigale_masked.fits"
+    # cat_fn = 'LRG.txt'
+    # cat_fn = 'catalog_dr10_allfoot_perbin_sigmaz0.0500.txt'
+
+    # cat_fn = 'catalog.txt'
+    # These two lines go together, for the filtered catalogues, otherwise use the one above.
+    # cat_fn = 'catalog_no_src_with_cluster_mask.txt'
+    # extra_str += f"/no_src_with_cluster_mask"
+    # 
+    # cat_fn = 'catalog_NGC_unfiltered.txt'
+    # extra_str += f"/NGC_unfiltered"
+    cat_fn = 'catalog_NGC_no_src_with_cluster_mask.txt'
+    extra_str += f"/NGC_no_src_with_cluster_mask"
 
 # cosmological parameters
 u = UnivMariana()
@@ -62,7 +80,7 @@ doBootstrap = True #False #True # do bootstrap or not? (not needed if e.g. shuff
 doMBins = False # we don't have mass bins yet
 doVShuffle = False #True # default measurement is False
 wantMF = False # default measurement is False
-doOnlyFiltering = True #True # default is False; if True, compute dT decrements and return TESTING!!!!!!!!!!!; the only problem is that.... it doesn't compute covariance only stackedMap; we use this for anisotropic
+doOnlyFiltering = False #True # default is False; if True, compute dT decrements and return TESTING!!!!!!!!!!!; the only problem is that.... it doesn't compute covariance only stackedMap; we use this for anisotropic
 
 mode = "kSZ"
 if "tau_screening" in mode:
@@ -73,9 +91,11 @@ elif "lensing" in mode:
     filterType = "meanring"
     Obs = 'tsz'
 else:
-    filterType = "diskring"
-    #Obs = 'ksz' # og
-    Obs = 'ksz_anisotropic' # TESTING!!!! info hidden in vX, vY radian angle wrt theta
+    # filterType = "diskring"
+    # filterType = 'DSigma'
+    filterType = param_Dict.get("filterType", "DSigma")
+    Obs = 'ksz' # og
+    # Obs = 'ksz_anisotropic' # TESTING!!!! info hidden in vX, vY radian angle wrt theta
     #Obs = 'tsz_anisotropic' # TESTING!!!! info hidden in vX, vY radian angle wrt theta
 
 if want_sim:
@@ -89,12 +109,22 @@ if want_sim:
 else:
     pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000.fits" # 1.6 arcmin # OG
 pathMask = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/wide_mask_GAL070_apod_1.50_deg_wExtended_srcfree_Will.fits'
-output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_test{extra_str}/"
+# output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_test{extra_str}/"
+# output_dir = f"/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/output_test{extra_str}/"
+output_dir = f"/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3{extra_str}/"
 pathHit = None
 
-#catalogs = {"DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn)}
-catalogs = {"DESI_pz1": Catalog(u, massConversion, name="", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn)}
+# catalogs = {"DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn)}
+# catalogs = {"DESI_pz1": Catalog(u, massConversion, name="", nameLong="DESI pz bin 1", out_dir=cat_dir, save=True, cat_fn=cat_fn)}
+# catalogs = {"DESI_pz1": Catalog(u, massConversion, name="DESI_pz1", nameLong="DESI pz bin 1", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+#             "DESI_pz2": Catalog(u, massConversion, name="DESI_pz2", nameLong="DESI pz bin 2", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+#             "DESI_pz3": Catalog(u, massConversion, name="DESI_pz3", nameLong="DESI pz bin 3", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+#             "DESI_pz4": Catalog(u, massConversion, name="DESI_pz4", nameLong="DESI pz bin 4", out_dir=cat_dir, save=False, cat_fn=cat_fn)}
 
+catalogs = {"DESIY3_z1": Catalog(u, massConversion, name="DESIY3_LRG_z1", nameLong="DESIY3 LRG z bin 1", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            "DESIY3_z2": Catalog(u, massConversion, name="DESIY3_LRG_z2", nameLong="DESIY3 LRG z bin 2", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            "DESIY3_z3": Catalog(u, massConversion, name="DESIY3_LRG_z3", nameLong="DESIY3 LRG z bin 3", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            "DESIY3_z4": Catalog(u, massConversion, name="DESIY3_LRG_z4", nameLong="DESIY3 LRG z bin 4", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn)}
 # Read CMB maps
 nProc = 128
 
@@ -120,8 +150,8 @@ for key in catalogs.keys():
                     cmap.map(),
                     cmap.mask(),
                     cmap.hit(),
-                    '',
-                    nameLong=None,
+                    name=catalog.name,
+                    nameLong=catalog.nameLong,
                     save=save,
                     nProc=nProc,
                     filterTypes=filterType,

@@ -7,7 +7,10 @@ import gc
 class ThumbStack(object):
 
 #   def __init__(self, U, Catalog, pathMap="", pathMask="", pathHit="", name="test", nameLong=None, save=False, nProc=1):
-   def __init__(self, U, Catalog, cmbMap, cmbMask, cmbHit=None, name="test", nameLong=None, save=False, nProc=1, filterTypes='diskring', doStackedMap=False, doMBins=False, doVShuffle=False, doBootstrap=False, doOnlyFiltering=False, cmbNu=150.e9, cmbUnitLatex=r'$\mu$K', output_dir="/pscratch/sd/b/boryanah/ACTxDESI/output/thumbstack/", Obs='ksz', wantMF=False, invPowerFunc=None, filterFuncRad=None, apod_pix=20):
+   def __init__(self, U, Catalog, cmbMap, cmbMask, cmbHit=None, name="test", nameLong=None, save=False, nProc=1, 
+                filterTypes='diskring', doStackedMap=False, doMBins=False, doVShuffle=False, doBootstrap=False, 
+                doOnlyFiltering=False, cmbNu=150.e9, cmbUnitLatex=r'$\mu$K', output_dir="/pscratch/sd/b/boryanah/ACTxDESI/output/thumbstack/", 
+                Obs='ksz', wantMF=False, invPowerFunc=None, filterFuncRad=None, apod_pix=20):
       
       self.nProc = nProc
       self.U = U
@@ -31,7 +34,9 @@ class ThumbStack(object):
       if filterTypes=='diskring':
          self.filterTypes = np.array(['diskring'])
       elif filterTypes=='DSigma':
-         self.filterTYpes = np.array(['DSigma'])
+         self.filterTypes = np.array(['DSigma'])
+      elif filterTypes=='upsilon':
+         self.filterTypes = np.array(['upsilon'])
       elif filterTypes=='meanring':
          self.filterTypes = np.array(['meanring']) 
       elif filterTypes=='disk':
@@ -39,7 +44,7 @@ class ThumbStack(object):
       elif filterTypes=='ring':
          self.filterTypes = np.array(['ring'])
       elif filterTypes=='all':
-         self.filterTypes = np.array(['diskring', 'disk', 'ring', 'meanring', 'DSigma'])
+         self.filterTypes = np.array(['diskring', 'disk', 'ring', 'meanring', 'DSigma', 'upsilon'])
 
       # estimators (ksz, tsz) and weightings (uniform, hit, var, ...)
       # for stacked profiles, bootstrap cov and v-shuffle cov
@@ -169,16 +174,14 @@ class ThumbStack(object):
          #self.RApMpch = np.linspace(self.rApMinMpch, self.rApMaxMpch, self.nRAp)
       
          # Aperture radii in arcmin
-         """
          self.rApMinArcmin = 1.  
          self.rApMaxArcmin = 6. 
          self.nRAp = 9
-         """
 
-         # anisotropic # TESTING!!!!!!! paper
-         self.rApMinArcmin = 1.
-         self.rApMaxArcmin = 14.
-         self.nRAp = 17 
+         # # anisotropic # TESTING!!!!!!! paper
+         # self.rApMinArcmin = 1.
+         # self.rApMaxArcmin = 14.
+         # self.nRAp = 17 
       
          """
          # anisotropic # TESTING!!!!!!! only used for plotting
@@ -204,6 +207,12 @@ class ThumbStack(object):
          self.nRAp = 9
          self.rApMinArcmin = 1.  #0.1   #1.  # 1.
          self.rApMaxArcmin = 6.  #6.  #6.  # 4.
+         self.RApArcmin = np.linspace(self.rApMinArcmin, self.rApMaxArcmin, self.nRAp)
+      elif 'upsilon' in filterTypes:
+         self.nRAp = 9
+         self.rApMinArcmin = 1.  #0.1   #1.  # 1.
+         self.rApMaxArcmin = 6.  #6.  #6.  # 4.
+         self.RApArcmin = np.linspace(self.rApMinArcmin, self.rApMaxArcmin, self.nRAp)
 
    def cutoutGeometry(self, test=False):
       '''Create enmap for the cutouts to be extracted.
@@ -552,6 +561,15 @@ class ThumbStack(object):
          filterW = inDisk / np.sum(pixArea * inDisk) - inRing / np.sum(pixArea * inRing)
          # The following line makes the filter compensated, uncomment and use if signal is too noisy.
          # filterW -= filterW.mean()  # ensure ∫K dA = 0 numerically
+      elif filterType=='upsilon':
+         # TODO: Not done!
+         filterW = inDisk / (r0**2) - inRing / (r1**2 - r0**2)
+         filterW = inDisk / np.sum(pixArea * inDisk) - inRing / np.sum(pixArea * inRing)
+         
+         filterW0 = 0 #TODO
+         
+         # The following line makes the filter compensated, uncomment and use if signal is too noisy.
+         # filterW -= filterW.mean()  # ensure ∫K dA = 0 numerically
 
       # apply the filter: int_disk d^2theta map -  disk_area / ring_area * int_ring d^2theta map
       filtMap = np.sum(pixArea * filterW * stampMap)   # [map unit * sr]
@@ -653,6 +671,13 @@ class ThumbStack(object):
                   # choose an equal area AP filter
                   r1 = self.RApArcminBins[iRAp+1] / 60. * np.pi/180.
                elif filterType == "DSigma":
+                  dr = 0.5 # arcmin, TODO: make this an input parameter
+                  # Disk radius in rad
+                  r0 = self.RApArcmin[iRAp] / 60. * np.pi/180.
+                  # outer ring radius in rad
+                  r1 = r0 + dr / 60. * np.pi/180.
+               elif filterType == 'upsilon':
+                  # TODO: This is not implemented yet
                   dr = 0.5 # arcmin, TODO: make this an input parameter
                   # Disk radius in rad
                   r0 = self.RApArcmin[iRAp] / 60. * np.pi/180.
@@ -2410,7 +2435,7 @@ class ThumbStack(object):
          result = np.exp(-0.5*self.RApArcmin**2/sigma_cluster**2) - np.exp(-0.5*(self.RApArcmin*np.sqrt(2.))**2/sigma_cluster**2)
       elif filterType=='meanring':
          result = np.exp(-0.5*self.RApArcmin**2/sigma_cluster**2) - np.exp(-0.5*(self.RApArcmin*np.sqrt(2.))**2/sigma_cluster**2)
-      elif filterType=='DSigma':
+      elif filterType=='DSigma' or filterType=='upsilon':
          # This is wrong, just a placeholder since we're not using the theory profile.
          result = np.exp(-0.5*self.RApArcmin**2/sigma_cluster**2) - np.exp(-0.5*(self.RApArcmin*np.sqrt(2.))**2/sigma_cluster**2)
       return result

@@ -5,7 +5,10 @@ from headers import *
 
 class Catalog(object):
 
-   def __init__(self, U, MassConversion, name="test", nameLong=None, pathInCatalog="", rV=1.,  save=False, nObj=None, out_dir='/pscratch/sd/b/boryanah/ACTxDESI/DESI/', fig_dir='/pscratch/sd/b/boryanah/ACTxDESI/figs/', cat_fn="/catalog.txt"):
+   def __init__(self, U, MassConversion, name="test", nameLong=None, pathInCatalog="", 
+                rV=1.,  save=False, load=True, nObj=None, 
+                out_dir='/pscratch/sd/b/boryanah/ACTxDESI/DESI/', 
+                fig_dir='/pscratch/sd/b/boryanah/ACTxDESI/figs/', cat_fn="/catalog.txt"):
       '''nObj: used to keep the first nObj objects of the catalog, useful for quick debugging
       '''
 
@@ -61,8 +64,8 @@ class Catalog(object):
          self.addIntegratedY()
          self.writeCatalog()
 
-      
-      self.loadCatalog(nObj=nObj)
+      if load:
+         self.loadCatalog(nObj=nObj)
    
 
    ##################################################################################
@@ -300,7 +303,7 @@ class Catalog(object):
 
 
    def loadCatalog(self, nObj=None):
-      self.want_fits = True # B.H.
+      self.want_fits = False # B.H.
       
       if type(self.pathOutCatalog) == list:
          for i, path in enumerate(self.pathOutCatalog):

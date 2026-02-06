@@ -1,0 +1,18 @@
+/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.16.5 and <1.23.0 is required for this version of SciPy (detected version 1.23.5
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+- load full catalog from /pscratch/sd/b/boryanah/ACTxDESI/DESI/DESI_pz1/LRG.txt
+- load full catalog from /pscratch/sd/b/boryanah/ACTxDESI/DESI/DESI_pz2/LRG.txt
+Traceback (most recent call last):
+  File "dsigma_thumbstack.py", line 102, in <module>
+    "DESI_pz2": Catalog(u, massConversion, name="DESI_pz2", nameLong="DESI pz bin 2", out_dir=cat_dir, save=False, cat_fn=cat_fn),
+  File "/global/homes/r/rhliu/projects/repos/ThumbStack/catalog.py", line 65, in __init__
+    self.loadCatalog(nObj=nObj)
+  File "/global/homes/r/rhliu/projects/repos/ThumbStack/catalog.py", line 352, in loadCatalog
+    data = np.genfromtxt(self.pathOutCatalog)
+  File "/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1959, in genfromtxt
+    fid = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise FileNotFoundError(f"{path} not found.")
+FileNotFoundError: /pscratch/sd/b/boryanah/ACTxDESI/DESI/DESI_pz2/LRG.txt not found.

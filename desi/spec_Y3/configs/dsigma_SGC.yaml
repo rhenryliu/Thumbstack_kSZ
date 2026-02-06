@@ -1,0 +1,17 @@
+filterType: 'DSigma'
+zeroV: false
+
+field: 'SGC' # NGC, SGC, or full
+filter_cut: 'no_src_with_cluster_mask' # unfiltered or no_src_with_cluster_mask
+
+cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/' # Frank's SPEC Y3 data
+fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+cat_fn: 'catalog_{field}_{filter_cut}.txt'
+# extra_str: "/{field}_{filter_cut}_zeroV"
+extra_str: "/{field}_{filter_cut}"
+save: true # For whether to save new thumbstack files
+
+save_invidiual_stacks: false
+cat_fn_dataframe: '{field}_zbin{bin}_{filter_cut}.csv'
+save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/{field}_{filter_cut}/'
+save_name: '{filterType}_profiles_{field}_{filter_cut}_z{bin}.csv'

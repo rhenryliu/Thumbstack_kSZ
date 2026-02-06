@@ -1,0 +1,114 @@
+/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.16.5 and <1.23.0 is required for this version of SciPy (detected version 1.23.5
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+Arguments: {'path2config': './configs/dsigma_NGC.yaml'}
+- load full catalog from /pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/DESIY3_LRG_z1/catalog_NGC_unfiltered.txt
+- load full catalog from /pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/DESIY3_LRG_z2/catalog_NGC_unfiltered.txt
+- load full catalog from /pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/DESIY3_LRG_z3/catalog_NGC_unfiltered.txt
+- load full catalog from /pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/DESIY3_LRG_z4/catalog_NGC_unfiltered.txt
+- Thumbstack: DESIY3_LRG_z1
+/global/homes/r/rhliu/projects/repos/ThumbStack/thumbstack.py:244: RuntimeWarning: divide by zero encountered in log10
+  self.MMax = np.logspace(np.log10(self.Catalog.Mvir.min()*1.1), np.log10(self.Catalog.Mvir.max()), self.nMMax)
+/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/core/function_base.py:151: RuntimeWarning: invalid value encountered in multiply
+  y *= step
+/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/core/function_base.py:161: RuntimeWarning: invalid value encountered in add
+  y += start
+loaded mmax
+overlap
+filtering
+Measure var for each aperture (no hit count)
+hitcount
+- compute all stacked profiles and their cov
+Performing 10000 bootstrap resamples
+took 2.5811452786127727 min
+Computing all stacked profiles (and cov) took 2.5879650274912516 min
+- load stacked profiles and their cov
+allstacked
+Computed all profiles for individual stacks. Allprofiles shape: (206226, 9)
+1.0
+1.625
+2.25
+2.875
+3.5
+4.125
+4.75
+5.375
+6.0
+Saving individual stacks to /pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/NGC_unfiltered/DSigma_profiles_NGC_unfiltered_z1.csv
+- Thumbstack: DESIY3_LRG_z2
+loaded mmax
+overlap
+filtering
+Measure var for each aperture (no hit count)
+hitcount
+- compute all stacked profiles and their cov
+Performing 10000 bootstrap resamples
+took 3.9970437129338583 min
+Computing all stacked profiles (and cov) took 4.007642110188802 min
+- load stacked profiles and their cov
+allstacked
+Computed all profiles for individual stacks. Allprofiles shape: (324624, 9)
+1.0
+1.625
+2.25
+2.875
+3.5
+4.125
+4.75
+5.375
+6.0
+Saving individual stacks to /pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/NGC_unfiltered/DSigma_profiles_NGC_unfiltered_z2.csv
+- Thumbstack: DESIY3_LRG_z3
+/global/homes/r/rhliu/projects/repos/ThumbStack/thumbstack.py:244: RuntimeWarning: invalid value encountered in log10
+  self.MMax = np.logspace(np.log10(self.Catalog.Mvir.min()*1.1), np.log10(self.Catalog.Mvir.max()), self.nMMax)
+loaded mmax
+overlap
+filtering
+Measure var for each aperture (no hit count)
+hitcount
+- compute all stacked profiles and their cov
+Performing 10000 bootstrap resamples
+took 2.7072413245836895 min
+Computing all stacked profiles (and cov) took 2.7139652212460836 min
+- load stacked profiles and their cov
+allstacked
+Computed all profiles for individual stacks. Allprofiles shape: (151092, 9)
+1.0
+1.625
+2.25
+2.875
+3.5
+4.125
+4.75
+5.375
+6.0
+Saving individual stacks to /pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/NGC_unfiltered/DSigma_profiles_NGC_unfiltered_z3.csv
+- Thumbstack: DESIY3_LRG_z4
+/global/homes/r/rhliu/projects/repos/ThumbStack/thumbstack.py:244: RuntimeWarning: divide by zero encountered in log10
+  self.MMax = np.logspace(np.log10(self.Catalog.Mvir.min()*1.1), np.log10(self.Catalog.Mvir.max()), self.nMMax)
+/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/core/function_base.py:151: RuntimeWarning: invalid value encountered in multiply
+  y *= step
+/global/homes/r/rhliu/.conda/envs/rhliu_tSZ/lib/python3.8/site-packages/numpy/core/function_base.py:161: RuntimeWarning: invalid value encountered in add
+  y += start
+loaded mmax
+overlap
+filtering
+Measure var for each aperture (no hit count)
+hitcount
+- compute all stacked profiles and their cov
+Performing 10000 bootstrap resamples
+took 1.347040863831838 min
+Computing all stacked profiles (and cov) took 1.3501350045204163 min
+- load stacked profiles and their cov
+allstacked
+Computed all profiles for individual stacks. Allprofiles shape: (105398, 9)
+1.0
+1.625
+2.25
+2.875
+3.5
+4.125
+4.75
+5.375
+6.0
+Saving individual stacks to /pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/NGC_unfiltered/DSigma_profiles_NGC_unfiltered_z4.csv
+Total time: 808.628740310669 seconds
