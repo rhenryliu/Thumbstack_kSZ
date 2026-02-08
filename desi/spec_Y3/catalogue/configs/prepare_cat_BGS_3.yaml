@@ -1,0 +1,18 @@
+source:
+  main_directory: '/global/cfs/cdirs/desi/survey/catalogs/DA2/'
+  post_rec_dir: 'analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/'
+  pre_rec_dir: 'LSS/loa-v1/LSScats/v1.1/nonKP/'
+  NGC_fn: 'BGS_BRIGHT-20.2_NGC_clustering.dat.fits'
+  SGC_fn: 'BGS_BRIGHT-20.2_SGC_clustering.dat.fits'
+
+processing:
+  cat_type: 'BGS'
+  filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
+  zbins:
+    - [0.1, 0.2]
+    - [0.2, 0.3]
+    - [0.3, 0.4]
+
+save:
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues/'
+  save_format: 'csv' # 'csv' or 'txt'
