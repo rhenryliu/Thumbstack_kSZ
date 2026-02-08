@@ -1,17 +1,29 @@
-filterType: 'diskring'
-zeroV: false # Whether to use zeroV correction
+stack:
+  save: true # For whether to save new thumbstack files
+  filterType: 'diskring' # which filter to use for stacking.
+  zeroV: false # Whether to use zeroV correction
 
-field: 'SGC' # NGC, SGC, or full
-filter_cut: 'unfiltered' # unfiltered or no_src_with_cluster_mask
+data: # This is the input data for the stack, which will be read in by the stack code
+  cat_type: 'LRG' # LRG or BGS (maybe ELG later)
+  field: 'SGC' # NGC, SGC, or full
+  filter_cut: 'unfiltered' # unfiltered, no_src_with_cluster_mask, or nopairs
+  cat_names: # Names for the different catalogues, which will be used to read in the correct files and save the correct output files.
+    - 'DESIY3_LRG'
+    - 'DESIY3_LRG_z1'
+    - 'DESIY3_LRG_z2'
+    - 'DESIY3_LRG_z3'
+    - 'DESIY3_LRG_z4'
 
-cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/' # Frank's SPEC Y3 data
-fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
-cat_fn: 'catalog_{field}_{filter_cut}.txt'
-# extra_str: "/{field}_{filter_cut}_zeroV"
-extra_str: "/{field}_{filter_cut}"
-save: true # For whether to save new thumbstack files
+  cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues/' # Frank's SPEC Y3 data
+  fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/' # Not sure if this is needed for the stack code, but just in case
+  cat_fn: 'catalog_{field}_{filter_cut}.txt' # Thumbstack Catalogue file name template, used to read in the correct catalogue file for the stack. Should have {field} and {filter_cut} as variables to be replaced by the config values.
 
-save_invidiual_stacks: true
-cat_fn_dataframe: '{field}_zbin{bin}_{filter_cut}.csv'
-save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/{field}_{filter_cut}/'
-save_name: '{filterType}_profiles_{field}_{filter_cut}_z{bin}.csv'
+  output_dir: "/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/"
+  extra_str: "{field}_{filter_cut}"
+
+extra:
+  save_invidiual_stacks: true # whether to save individual profiles for each redshift bin, mostly for debugging purposes
+  catalogue_path: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues/' # Path for the original catalogue 
+  catalogue_dataframe: '{field}_zbin{bin}_{filter_cut}.csv' # The original catalogue file, read for its vR
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/{field}_{filter_cut}/' # Path to save the individual stack profiles
+  save_name: '{cat_name}_{filterType}_{field}_{filter_cut}.csv' # Name for the individual stack profiles

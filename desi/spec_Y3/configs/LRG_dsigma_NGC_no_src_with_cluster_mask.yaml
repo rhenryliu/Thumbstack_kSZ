@@ -1,0 +1,29 @@
+stack:
+  save: true
+  filterType: 'DSigma'
+  zeroV: false
+
+data:
+  cat_type: 'LRG'
+  field: 'NGC'
+  filter_cut: 'no_src_with_cluster_mask'
+  cat_names:
+    - 'DESIY3_LRG'
+    - 'DESIY3_LRG_z1'
+    - 'DESIY3_LRG_z2'
+    - 'DESIY3_LRG_z3'
+    - 'DESIY3_LRG_z4'
+
+  cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues/'
+  fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+  cat_fn: 'catalog_{field}_{filter_cut}.txt'
+
+  output_dir: "/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/"
+  extra_str: "{field}_{filter_cut}"
+
+extra:
+  save_invidiual_stacks: false
+  catalogue_path: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues/'
+  catalogue_dataframe: '{field}_zbin{bin}_{filter_cut}.csv'
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/{field}_{filter_cut}/'
+  save_name: '{cat_name}_{filterType}_{field}_{filter_cut}.csv'
