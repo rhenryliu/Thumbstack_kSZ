@@ -228,13 +228,15 @@ for i, key in enumerate(catalogs.keys()):
         # We also add the stacks as new columns to this original catalogue and save it as a new csv file.
         
         catalogue_path = extra_config.get('catalogue_path', '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues/').format(cat_type=cat_type)
-        catalogue_dataframe_template = extra_config.get('catalogue_dataframe', '{field}_{bin}_{filter_cut}.csv')
+        # catalogue_dataframe_template = extra_config.get('catalogue_dataframe', '{field}_{bin}_{filter_cut}.csv')
+        catalogue_dataframe_template = '{field}_{bin}_{filter_cut}.csv' 
         
         if key in ["DESIY3_LRG", "DESIY3_BGS"]:
             # for the all z bins catalogues, we use a different naming convention for the dataframe, since they don't correspond to a specific z bin.
             catalogue_dataframe = catalogue_dataframe_template.format(field=field, bin='catalog_Y3', filter_cut=filter_cut)
         else:
-            catalogue_dataframe = catalogue_dataframe_template.format(field=field, bin=f'zbin{i}', filter_cut=filter_cut)
+            sample, zbin = key.rsplit('_z', 1) # split on the last occurrence of '_z' to separate the sample name and the z bin number
+            catalogue_dataframe = catalogue_dataframe_template.format(field=field, bin=f'zbin{zbin}', filter_cut=filter_cut)
         
         # df_catalog = pd.read_csv(cat_dir + cat_fn, delim_whitespace=True)
         data_names = ['TARGETID', 'Z','RA', 'DEC', 'VEL_LOS_RENORM']
