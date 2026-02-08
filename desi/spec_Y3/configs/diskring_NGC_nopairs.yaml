@@ -1,8 +1,8 @@
 filterType: 'diskring'
 zeroV: false # Whether to use zeroV correction
 
-field: 'full' # NGC, SGC, or full
-filter_cut: 'unfiltered' # unfiltered or no_src_with_cluster_mask
+field: 'NGC' # NGC, SGC, or full
+filter_cut: 'nopairs' # unfiltered, no_src_with_cluster_mask, or nopairs
 
 cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/' # Frank's SPEC Y3 data
 fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'

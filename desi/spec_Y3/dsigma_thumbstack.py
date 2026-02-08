@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack')
+sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack_kSZ')
 
 from importlib import reload
 import universe

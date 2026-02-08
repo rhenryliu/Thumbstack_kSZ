@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack_kSZ/')
+sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack')
 
 from importlib import reload
 import universe
@@ -146,10 +146,10 @@ pathHit = None
 #             "DESI_pz4": Catalog(u, massConversion, name="DESI_pz4", nameLong="DESI pz bin 4", out_dir=cat_dir, save=False, cat_fn=cat_fn)}
 
 catalogs = {"DESIY3_LRG": Catalog(u, massConversion, name="DESIY3_LRG", nameLong="DESIY3 LRG all z bins", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
-            "DESIY3_z1": Catalog(u, massConversion, name="DESIY3_LRG_z1", nameLong="DESIY3 LRG z bin 1", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
-            "DESIY3_z2": Catalog(u, massConversion, name="DESIY3_LRG_z2", nameLong="DESIY3 LRG z bin 2", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
-            "DESIY3_z3": Catalog(u, massConversion, name="DESIY3_LRG_z3", nameLong="DESIY3 LRG z bin 3", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
-            "DESIY3_z4": Catalog(u, massConversion, name="DESIY3_LRG_z4", nameLong="DESIY3 LRG z bin 4", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            # "DESIY3_z1": Catalog(u, massConversion, name="DESIY3_LRG_z1", nameLong="DESIY3 LRG z bin 1", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            # "DESIY3_z2": Catalog(u, massConversion, name="DESIY3_LRG_z2", nameLong="DESIY3 LRG z bin 2", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            # "DESIY3_z3": Catalog(u, massConversion, name="DESIY3_LRG_z3", nameLong="DESIY3 LRG z bin 3", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
+            # "DESIY3_z4": Catalog(u, massConversion, name="DESIY3_LRG_z4", nameLong="DESIY3 LRG z bin 4", out_dir=cat_dir, save=False, fig_dir=fig_dir, cat_fn=cat_fn),
             }
 # Read CMB maps
 nProc = 128

@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack/')
+sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack_kSZ/')
 
 from importlib import reload
 import universe
@@ -48,7 +48,7 @@ fig_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
 
 field = 'full'  # 'NGC' or 'SGC' or 'full'
 fields = ['NGC', 'SGC', 'full']
-filter_type = 'unfiltered'  # 'unfiltered' or 'no_src_with_cluster_mask'
+filter_type = 'nopairs'  # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
 # filter_type = 'no_src_with_cluster_mask'
 
 

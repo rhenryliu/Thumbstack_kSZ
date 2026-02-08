@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack/')
+sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack_kSZ/')
 
 from importlib import reload
 import universe
@@ -47,34 +47,37 @@ out_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/'
 fig_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
 
 field = 'full'  # 'NGC' or 'SGC' or 'full'
-filter_type = 'unfiltered'  # 'unfiltered' or 'no_src_with_cluster_mask'
+fields = ['NGC', 'SGC', 'full']
+filter_type = 'nopairs'  # 'unfiltered', 'no_src_with_cluster_mask' or 'nopairs'
 
 
 # cat_fn = "/catalog.txt"
 # cat_fn = "/catalog_no_src_with_cluster_mask.txt"
 # cat_fn = "/catalog_NGC_unfiltered.txt"
 # cat_fn = "/catalog_SGC_unfiltered.txt"
-cat_fn = f"/catalog_{field}_{filter_type}.txt"
+for field in fields:
+    print(f'Processing field {field} with filter type {filter_type}...')
+    cat_fn = f"/catalog_{field}_{filter_type}.txt"
 
-for bin in bins:
-    print(f'Processing z bin {bin}...')
-    # data_df = pd.read_csv(pathCat + f'full_zbin{bin}_unfiltered.csv')
-    # data_df = pd.read_csv(pathCat + f'full_zbin{bin}_no_src_with_cluster_mask.csv')
-    # data_df = pd.read_csv(pathCat + f'NGC_zbin{bin}_unfiltered.csv')
-    data_df = pd.read_csv(pathCat + f'{field}_zbin{bin}_{filter_type}.csv')
-    data_df = data_df[data_names]
-    data_df.rename(columns={'VEL_LOS_RENORM': 'vR'}, inplace=True) # type: ignore
-    print(f'Dataframe shape: {data_df.shape}')
+    for bin in bins:
+        print(f'Processing z bin {bin}...')
+        # data_df = pd.read_csv(pathCat + f'full_zbin{bin}_unfiltered.csv')
+        # data_df = pd.read_csv(pathCat + f'full_zbin{bin}_no_src_with_cluster_mask.csv')
+        # data_df = pd.read_csv(pathCat + f'NGC_zbin{bin}_unfiltered.csv')
+        data_df = pd.read_csv(pathCat + f'{field}_zbin{bin}_{filter_type}.csv')
+        data_df = data_df[data_names]
+        data_df.rename(columns={'VEL_LOS_RENORM': 'vR'}, inplace=True) # type: ignore
+        print(f'Dataframe shape: {data_df.shape}')
 
-    cat_name = f'DESIY3_LRG_z{bin}'
-    
-    cat = make_Catalog(u, massConversion, data_df, 
-                       out_dir=out_dir,
-                       fig_dir=fig_dir, 
-                       cat_fn=cat_fn,
-                       name=cat_name)
-    cat.writeCatalog()
-    print('Saving to ', out_dir + cat_name + cat_fn)
+        cat_name = f'DESIY3_LRG_z{bin}'
+        
+        cat = make_Catalog(u, massConversion, data_df, 
+                        out_dir=out_dir,
+                        fig_dir=fig_dir, 
+                        cat_fn=cat_fn,
+                        name=cat_name)
+        cat.writeCatalog()
+        print('Saving to ', out_dir + cat_name + cat_fn)
     
 print('All done!')
 # data_df = pd.read_csv(pathCat + 'full_zbin1_unfiltered.csv')

@@ -2,7 +2,7 @@ filterType: 'DSigma'
 zeroV: false
 
 field: 'full' # NGC, SGC, or full
-filter_cut: 'no_src_with_cluster_mask' # unfiltered or no_src_with_cluster_mask
+filter_cut: 'nopairs' # unfiltered, no_src_with_cluster_mask, or nopairs
 
 cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/' # Frank's SPEC Y3 data
 fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
