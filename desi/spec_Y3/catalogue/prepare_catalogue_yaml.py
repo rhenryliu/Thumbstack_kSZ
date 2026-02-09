@@ -233,6 +233,8 @@ cmbMask = enmap.read_fits(f"{masks_directory}/wide_mask_GAL070_apod_1.50_deg_wEx
 print(f"\n=== Processing with filter_type: {filter_type} ===")
 apply_act_filter = filter_type in ['no_src_with_cluster_mask', 'nopairs']
 apply_pair_pruning = filter_type == 'nopairs'
+if apply_pair_pruning:
+    physical_sep = config['processing'].get('physical_sep', 1.0) # Mpc
 
 if apply_act_filter:
     print("\n=== Applying ACT Overlap Filtering ===")
@@ -268,14 +270,10 @@ df = pre_rec_sort_ACT
 # df3 = full_zbins['full_zbin3']
 # df4 = full_zbins['full_zbin4']
 
-def save_catalogs(physical_sep=1.0):
+def save_catalogs():
     """
     Save all processed catalogs to files
     
-    Parameters:
-    -----------
-    physical_sep : float
-        Physical separation in Mpc for pruning close pairs (default: 1.0)
     """
     import os
     os.makedirs(output_dir, exist_ok=True)

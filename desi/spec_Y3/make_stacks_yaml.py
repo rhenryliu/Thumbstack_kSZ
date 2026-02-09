@@ -146,6 +146,8 @@ if stack_config.get('zeroV', False):
 
 pathMap = "/pscratch/sd/b/boryanah/ACTxDESI/ACT/hilc_fullRes_TT_17000.fits" # 1.6 arcmin # OG
 pathMask = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/wide_mask_GAL070_apod_1.50_deg_wExtended_srcfree_Will.fits'
+# TESTING: TODO: Maybe change back?
+# pathMask = '/pscratch/sd/b/boryanah/ACTxDESI/ACT/wide_mask_GAL070_apod_1.50_deg_wExtended.fits'
 # output_dir = f"/pscratch/sd/b/boryanah/ACTxDESI/output_test{extra_str}/"
 # output_dir = f"/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/output_test{extra_str}/"
 output_dir = output_dir_ + f"{extra_str}/"

@@ -2,13 +2,12 @@ source:
   main_directory: '/global/cfs/cdirs/desi/survey/catalogs/DA2/'
   post_rec_dir: 'analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/'
   pre_rec_dir: 'LSS/loa-v1/LSScats/v1.1/nonKP/'
-  NGC_fn: 'LRG_NGC_clustering.dat.fits'
-  SGC_fn: 'LRG_SGC_clustering.dat.fits'
+  NGC_fn: 'LRG_NGC_0_clustering.ran.fits'
+  SGC_fn: 'LRG_SGC_0_clustering.ran.fits'
 
 processing:
   cat_type: 'LRG'
-  filter_type: 'nopairs' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
-  physical_sep: 0.5 # in unit of Mpc/h, only used when filter_type is 'nopairs'
+  filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
   zbins:
     - [0.4, 0.6]
     - [0.6, 0.8]
@@ -16,5 +15,5 @@ processing:
     - [0.95, 1.1]
 
 save:
-  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues/'
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3_random/LRG_catalogues/'
   save_format: 'csv' # 'csv' or 'txt'
