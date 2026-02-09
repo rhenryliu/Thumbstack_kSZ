@@ -1,4 +1,3 @@
-
 import sys
 sys.path.append('/global/homes/r/rhliu/projects/repos/ThumbStack_kSZ/')
 
@@ -42,6 +41,11 @@ want_sim = False
 
 parser = argparse.ArgumentParser(description='Process config.')
 parser.add_argument('-p', '--path2config', type=str, default='./configs/diskring_NGC.yaml', help='Path to the configuration file.')
+parser.add_argument('--filterType', type=str, default=None, help='Override filterType from config (DSigma or diskring).')
+parser.add_argument('--field', type=str, default=None, help='Override field from config (NGC, SGC, or full).')
+parser.add_argument('--filter-cut', type=str, default=None, help='Override filter_cut from config.')
+parser.add_argument('--cat-type', type=str, default=None, help='Override cat_type from config (LRG or BGS).')
+parser.add_argument('--cat-names', type=str, nargs='+', default=None, help='Override cat_names from config (space-separated list).')
 args = vars(parser.parse_args())
 print(f"Arguments: {args}")
 path2config = args['path2config']
@@ -52,10 +56,11 @@ stack_config = config.get('stack', {})
 data_config = config.get('data', {})
 extra_config = config.get('extra', {})
     
-cat_type = data_config.get('cat_type', 'LRG') # LRG or BGS (maybe ELG later)
-field = data_config.get('field', 'NGC') # NGC, SGC, or full
-filter_cut = data_config.get('filter_cut', 'unfiltered') # unfiltered or no_src_with_cluster_mask
-cat_names = data_config.get('cat_names', [f"DESIY3_{cat_type}"]) # Names for the different catalogues, which will be used to read in the correct files and save the correct output files. Should be a list of strings.
+filterType = args['filterType'] if args['filterType'] is not None else stack_config.get("filterType", "DSigma")
+cat_type = args['cat_type'] if args['cat_type'] is not None else data_config.get('cat_type', 'LRG')
+field = args['field'] if args['field'] is not None else data_config.get('field', 'NGC')
+filter_cut = args['filter_cut'] if args['filter_cut'] is not None else data_config.get('filter_cut', 'unfiltered')
+cat_names = args['cat_names'] if args['cat_names'] is not None else data_config.get('cat_names', [f"DESIY3_{cat_type}"]) # Names for the different catalogues, which will be used to read in the correct files and save the correct output files. Should be a list of strings.
 
 cat_dir = data_config.get('cat_dir', '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogue/').format(cat_type=cat_type) # Frank's SPEC Y3 data
 fig_dir = data_config.get('fig_dir', '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/')
@@ -126,7 +131,8 @@ elif "lensing" in mode:
 else:
     # filterType = "diskring"
     # filterType = 'DSigma'
-    filterType = stack_config.get("filterType", "DSigma")
+    # filterType = stack_config.get("filterType", "DSigma")
+    filterType = filterType # use the filter type from the config, which can be overridden by command line argument
     Obs = 'ksz' # og
     # Obs = 'ksz_anisotropic' # TESTING!!!! info hidden in vX, vY radian angle wrt theta
     #Obs = 'tsz_anisotropic' # TESTING!!!! info hidden in vX, vY radian angle wrt theta
