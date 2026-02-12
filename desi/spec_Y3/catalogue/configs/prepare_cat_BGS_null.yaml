@@ -7,7 +7,7 @@ source:
 
 processing:
   cat_type: 'BGS'
-  filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
+  filter_type: 'nopairs' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
   zbins:
     - [0.1, 0.2]
     - [0.2, 0.3]

@@ -7,7 +7,7 @@ source:
 
 processing:
   cat_type: 'LRG'
-  filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
+  filter_type: 'nopairs' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
   zbins:
     - [0.4, 0.6]
     - [0.6, 0.8]
