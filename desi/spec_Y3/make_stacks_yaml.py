@@ -195,7 +195,7 @@ for i, key in enumerate(catalogs.keys()):
     catalog.integratedTau = np.empty_like(catalog.RA)
 
     #### CHANGE HERE IF NECESSSARY: ZEROING VELOCITY COMPONENT:
-    if config.get('zeroV', False):
+    if stack_config.get('zeroV', False):
         # print("Removing mean velocity from the catalog")
         catalog.vR -= np.mean(catalog.vR) # removing mean velocity # type: ignore
         # extra_str += "_zeroV"
@@ -262,7 +262,7 @@ for i, key in enumerate(catalogs.keys()):
 
         for j, R in enumerate(ts.RApArcmin):
             print(str(R), )
-            stacks = np.zeros(NObj)
+            # stacks = np.zeros(NObj)
             # stacks[mask] = allProfiles[:, j]
             stacks = allProfiles[:, j]
 

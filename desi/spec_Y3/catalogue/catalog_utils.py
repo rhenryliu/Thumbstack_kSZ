@@ -75,7 +75,7 @@ def make_Catalog(U, MassConversion, df, name,
     # cat.vR = np.zeros_like(cat.RA)  # [km/s]   from spherical catalog, >0 away from us
     try:
         cat.vR = df['vR'].values  # [km/s]
-    except:
+    except KeyError:
         print('no velocity column for catalogue. Replaced with zeros')
         cat.vR = np.zeros_like(cat.RA)  # [km/s]
     cat.vTheta = np.zeros_like(cat.RA)   # [km/s]
