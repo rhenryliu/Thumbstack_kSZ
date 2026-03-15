@@ -67,7 +67,7 @@ massConversion = MassConversionKravtsov14()
 out_dir = config['save'].get('save_dir', '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/')
 fig_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
 
-field = 'full'  # 'NGC' or 'SGC' or 'full'
+fields = ['full']  # 'NGC' or 'SGC' or 'full'
 fields = ['NGC', 'SGC', 'full']
 # filter_type = 'nopairs'  # 'unfiltered', 'no_src_with_cluster_mask' or 'nopairs'
 
