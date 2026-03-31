@@ -228,7 +228,7 @@ for i, key in enumerate(catalogs.keys()):
                     apod_pix=apod_pix)
     
     # Now we want to add some code to save the individual stacks
-    if extra_config.get('save_invidiual_stacks', False):
+    if extra_config.get('save_individual_stacks', False):
     # if False: # for now we don't need to save individual stacks, and this is a bit slow, so I'm commenting it out. We can uncomment and use when needed.
         
         # Note that the catalogues here are the original catalogues before the processing necessary to read into ThumbStack 
@@ -248,6 +248,7 @@ for i, key in enumerate(catalogs.keys()):
         
         # df_catalog = pd.read_csv(cat_dir + cat_fn, delim_whitespace=True)
         data_names = ['TARGETID', 'Z','RA', 'DEC', 'VEL_LOS_RENORM']
+        data_names = ['Z','RA', 'DEC', 'VEL_LOS_RENORM']
         data_df = pd.read_csv(catalogue_path + catalogue_dataframe)
         data_df = data_df[data_names]
         data_df.rename(columns={'VEL_LOS_RENORM': 'vR'}, inplace=True)
