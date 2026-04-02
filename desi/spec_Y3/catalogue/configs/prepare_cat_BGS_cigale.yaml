@@ -3,7 +3,8 @@ source:
 
 processing:
   cat_type: 'BGS'
-  filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
+  # filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
+  filter_type: 'nopairs' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
   physical_sep: 0.5 # in unit of Mpc/h, only used when filter_type is 'nopairs'
   zbins:
     - [0.1, 0.2]
