@@ -40,7 +40,7 @@ extra_str = "" # initialize
 want_sim = False
 
 parser = argparse.ArgumentParser(description='Process config.')
-parser.add_argument('-p', '--path2config', type=str, default='./configs/diskring_NGC.yaml', help='Path to the configuration file.')
+parser.add_argument('-p', '--path2config', type=str, default='./configs/BGS_dsigma_full_cigale.yaml', help='Path to the configuration file.')
 parser.add_argument('--filterType', type=str, default=None, help='Override filterType from config (DSigma or diskring).')
 parser.add_argument('--field', type=str, default=None, help='Override field from config (NGC, SGC, or full).')
 parser.add_argument('--filter-cut', type=str, default=None, help='Override filter_cut from config.')
@@ -186,6 +186,23 @@ cmap = cmbMap(pathMap,
               nu=CMB_nu, unitLatex=r'y',
               name='')
 
+# --- MASS FILTERING SETUP (optional) ---
+# Read once here; per-catalog application happens inside the loop below.
+# If 'mass' is absent from the config this is a no-op and all existing
+# behaviour is preserved.
+_mass_config = config.get('mass', None)
+if _mass_config is not None:
+    from mass_filter_utils import (compute_mass_mask, apply_catalog_mask,
+                                   get_csv_path, mass_label as _mass_label_fn)
+    _mlabel = _mass_label_fn(_mass_config)
+    effective_output_dir = output_dir_ + f"{extra_str}_{_mlabel}/"
+    print(f"[mass filter] Active: strategy='{_mass_config['strategy']}', "
+          f"label='{_mlabel}'")
+    print(f"[mass filter] Output directory: {effective_output_dir}")
+else:
+    _mlabel = None
+    effective_output_dir = output_dir
+
 for i, key in enumerate(catalogs.keys()):
     catalog = catalogs[key]
     catalog.Mstellar = np.empty_like(catalog.RA)
@@ -194,11 +211,36 @@ for i, key in enumerate(catalogs.keys()):
     catalog.integratedKSZ = np.empty_like(catalog.RA)
     catalog.integratedTau = np.empty_like(catalog.RA)
 
-    #### CHANGE HERE IF NECESSSARY: ZEROING VELOCITY COMPONENT:
+    # --- MASS FILTERING (per catalog) ---
+    if _mass_config is not None:
+        _mass_col = _mass_config.get('col', 'LOGMSTAR')
+        _csv_path = get_csv_path(key, cat_type, cat_dir, field, filter_cut)
+        print(f"[mass filter] {key}: reading '{_mass_col}' from {_csv_path}")
+        _mass_df = pd.read_csv(_csv_path, usecols=[_mass_col])
+        _logmstar = _mass_df[_mass_col].values
+        if len(_logmstar) != catalog.nObj:
+            raise ValueError(
+                f"[mass filter] Mass column length ({len(_logmstar)}) != "
+                f"catalog nObj ({catalog.nObj}) for {key}. "
+                f"CSV: {_csv_path}. Ensure the CSV and ThumbStack catalog "
+                f"were produced from the same run."
+            )
+        _mass_mask = compute_mass_mask(_logmstar, _mass_config) # type: ignore
+        _n_before = catalog.nObj
+        apply_catalog_mask(catalog, _mass_mask)
+        print(f"[mass filter] {key}: {_n_before} -> {catalog.nObj} objects retained")
+
+    #### CHANGE HERE IF NECESSARY: ZEROING VELOCITY COMPONENT:
     if stack_config.get('zeroV', False):
-        # print("Removing mean velocity from the catalog")
+        print("Removing mean velocity from the catalog")
         catalog.vR -= np.mean(catalog.vR) # removing mean velocity # type: ignore
         # extra_str += "_zeroV"
+
+    if stack_config.get('shuffle', False):
+        print("Shuffling velocities in the catalog for null test")
+        seed = stack_config.get('shuffle_seed', 42)
+        rng = np.random.default_rng(seed=seed)
+        rng.shuffle(catalog.vR) # shuffling velocity for null test # type: ignore
         
     # catalog.vR -= np.mean(catalog.vR) # removing mean velocity # type: ignore
 
@@ -220,7 +262,7 @@ for i, key in enumerate(catalogs.keys()):
                     doOnlyFiltering=doOnlyFiltering,
                     cmbNu=cmap.nu,
                     cmbUnitLatex=cmap.unitLatex,
-                    output_dir=output_dir,
+                    output_dir=effective_output_dir,
                     Obs=Obs,
                     wantMF=wantMF,
                     invPowerFunc=invPowerFunc,
@@ -271,6 +313,8 @@ for i, key in enumerate(catalogs.keys()):
 
         # save_name = extra_config.get('save_dir', '').format(field=field, filter_cut=filter_cut) + extra_config.get('save_name', '{filterType}_profiles_{field}_{filter_cut}_z{bin}.csv').format(filterType=filterType, field=field, bin=i+1, filter_cut=filter_cut)
         save_dir = extra_config.get('save_dir', '').format(field=field, filter_cut=filter_cut)
+        if _mlabel is not None:
+            save_dir = save_dir.rstrip('/') + f'_{_mlabel}/'
         save_name = extra_config.get('save_name', '{cat_name}_{filterType}_{field}_{filter_cut}.csv').format(cat_name=key, filterType=filterType, field=field, filter_cut=filter_cut)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)

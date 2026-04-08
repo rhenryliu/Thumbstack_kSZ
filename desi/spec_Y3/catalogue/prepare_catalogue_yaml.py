@@ -43,6 +43,7 @@ SGC_fn = config['source'].get('SGC_fn', 'LRG_SGC_clustering.dat.fits')
 
 cat_type = config['processing'].get('cat_type', 'LRG')
 filter_type = config['processing'].get('filter_type', 'nopairs')
+zeroV = config['processing'].get('zeroV', False)
 zbins_config = config['processing'].get('zbins', None)
 if zbins_config is not None:
     zbins = [tuple(z) for z in config["processing"]["zbins"]]
@@ -125,8 +126,15 @@ pre_rec_SGC["VEL_LOS"] = vel_SGC_LOS
 renorm_NGC = cosmo.growth_factor(pre_rec_NGC["Z"])/cosmo.growth_factor(z_eff)
 renorm_SGC = cosmo.growth_factor(pre_rec_SGC["Z"])/cosmo.growth_factor(z_eff)
 
+# VEL_LOS_RENORM is always computed without zeroing here.
+# If zeroV=True, mean subtraction is applied later, after filtering and binning
+# (per-field for non-binned catalogs, per-field per-bin for binned catalogs).
 pre_rec_NGC["VEL_LOS_RENORM"] = vel_NGC_LOS*renorm_NGC
 pre_rec_SGC["VEL_LOS_RENORM"] = vel_SGC_LOS*renorm_SGC
+if zeroV:
+    print("zeroV=True: mean subtraction will be applied per-field and per-bin after filtering.")
+else:
+    print("Using original velocities without zeroV correction.")
 
 # Merge the NGC and SGC samples
 pre_rec = pd.concat([pre_rec_NGC, pre_rec_SGC])
@@ -261,6 +269,46 @@ ngc_zbins = create_redshift_bins(pre_rec_NGC_sort_ACT, z_bins=zbins, name="NGC")
 
 print("\nSGC catalog bins:")
 sgc_zbins = create_redshift_bins(pre_rec_SGC_sort_ACT, z_bins=zbins, name="SGC")
+
+if zeroV:
+    print("\n=== Applying zeroV corrections (post-filter) ===")
+
+    # Non-binned zeroing: subtract the post-filter mean VEL_LOS_RENORM for each field
+    # independently. NGC and SGC are zeroed separately so their distinct velocity
+    # distributions are not conflated. pre_rec_sort_ACT is then reconstructed from
+    # the field-zeroed catalogs.
+    pre_rec_NGC_sort_ACT = pre_rec_NGC_sort_ACT.copy()
+    pre_rec_NGC_sort_ACT["VEL_LOS_RENORM"] -= np.mean(pre_rec_NGC_sort_ACT["VEL_LOS_RENORM"])
+
+    pre_rec_SGC_sort_ACT = pre_rec_SGC_sort_ACT.copy()
+    pre_rec_SGC_sort_ACT["VEL_LOS_RENORM"] -= np.mean(pre_rec_SGC_sort_ACT["VEL_LOS_RENORM"])
+
+    pre_rec_sort_ACT = pd.concat([pre_rec_NGC_sort_ACT, pre_rec_SGC_sort_ACT]).sort_values("Z")
+    print(f"Non-binned: zeroed NGC ({len(pre_rec_NGC_sort_ACT)} obj) and SGC ({len(pre_rec_SGC_sort_ACT)} obj) independently.")
+
+    # Per-bin zeroing: for each redshift bin, subtract the per-field per-bin mean
+    # VEL_LOS_RENORM. This uses the original (unmodified) filtered velocities as the
+    # base — the non-binned and per-bin subtractions are independent operations on the
+    # same underlying VEL_LOS_RENORM. Empty bins are skipped to avoid NaN propagation.
+    for key in ngc_zbins:
+        if len(ngc_zbins[key]) > 0:
+            ngc_zbins[key] = ngc_zbins[key].copy()
+            ngc_zbins[key]["VEL_LOS_RENORM"] -= np.mean(ngc_zbins[key]["VEL_LOS_RENORM"])
+
+    for key in sgc_zbins:
+        if len(sgc_zbins[key]) > 0:
+            sgc_zbins[key] = sgc_zbins[key].copy()
+            sgc_zbins[key]["VEL_LOS_RENORM"] -= np.mean(sgc_zbins[key]["VEL_LOS_RENORM"])
+
+    # Reconstruct full z-bins by concatenating the field-zeroed NGC and SGC bins.
+    # This ensures the full bins reflect the independent per-field zeroing rather
+    # than a single combined mean.
+    for i in range(1, len(ngc_zbins) + 1):
+        full_zbins[f"full_zbin{i}"] = pd.concat([
+            ngc_zbins[f"NGC_zbin{i}"],
+            sgc_zbins[f"SGC_zbin{i}"]
+        ]).sort_values("Z")
+    print("Per-bin: zeroed each NGC and SGC z-bin independently and reconstructed full z-bins.")
 
 # For backward compatibility, keep the original variable names
 df = pre_rec_sort_ACT

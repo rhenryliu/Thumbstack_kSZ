@@ -1,14 +1,14 @@
 stack:
   save: true
   filterType: 'DSigma'
-  zeroV: false
+  zeroV: true
 
 data:
   cat_type: 'LRG'
   field: 'full'
   filter_cut: 'no_src_with_cluster_mask'
   cat_names:
-    - 'DESIY3_LRG'
+    # - 'DESIY3_LRG'
     - 'DESIY3_LRG_z1'
     - 'DESIY3_LRG_z2'
     - 'DESIY3_LRG_z3'

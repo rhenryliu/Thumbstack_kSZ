@@ -9,6 +9,7 @@ processing:
   cat_type: 'LRG'
   filter_type: 'no_src_with_cluster_mask' # 'unfiltered', 'no_src_with_cluster_mask', or 'nopairs'
   physical_sep: 0.5 # in unit of Mpc, only used when filter_type is 'nopairs'
+  zeroV: true # whether to set the mean peculiar velocity to zero, does this for each field (NGC and SGC) and each redshift bin separately.
   zbins:
     - [0.4, 0.6]
     - [0.6, 0.8]
@@ -16,5 +17,5 @@ processing:
     - [0.95, 1.1]
 
 save:
-  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues/'
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues_zeroV/'
   save_format: 'csv' # 'csv' or 'txt'
