@@ -1,9 +1,11 @@
 stack:
   save: true # For whether to save new thumbstack files
   filterType: 'DSigma' # which filter to use for stacking.
-  zeroV: false # Whether to use zeroV correction
+  zeroV: true # Whether to use zeroV correction
   shuffle: true # Whether to shuffle the velocities in the catalog for null test
-  shuffle_seed: 100 # Random seed for shuffling velocities, added for reproducibility
+  shuffle_seed: 42 # Master seed used to generate the list of shuffle seeds (make_stacks_shuffle.py)
+  n_seeds: 50 # Number of shuffle realizations to run (make_stacks_shuffle.py)
+  bootstrap: false # Covariance method: true=per-seed bootstrap, false=inter-shuffle sample covariance (make_stacks_shuffle.py)
 
 data: # This is the input data for the stack, which will be read in by the stack code
   cat_type: 'BGS' # LRG or BGS (maybe ELG later)
