@@ -671,14 +671,14 @@ class ThumbStack(object):
                   # choose an equal area AP filter
                   r1 = self.RApArcminBins[iRAp+1] / 60. * np.pi/180.
                elif filterType == "DSigma":
-                  dr = 0.5 # arcmin, TODO: make this an input parameter
+                  dr = 0.75 # sqrt(0.5) arcmin, TODO: make this an input parameter
                   # Disk radius in rad
                   r0 = self.RApArcmin[iRAp] / 60. * np.pi/180.
                   # outer ring radius in rad
                   r1 = r0 + dr / 60. * np.pi/180.
                elif filterType == 'upsilon':
                   # TODO: This is not implemented yet
-                  dr = 0.5 # arcmin, TODO: make this an input parameter
+                  dr = 0.75 # sqrt(0.5) arcmin, TODO: make this an input parameter
                   # Disk radius in rad
                   r0 = self.RApArcmin[iRAp] / 60. * np.pi/180.
                   # outer ring radius in rad

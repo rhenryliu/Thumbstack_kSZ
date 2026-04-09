@@ -69,7 +69,7 @@ YAML configs for stacking are in `desi/spec_Y3/configs/`. Catalogue prep configs
 - `save`: output directory and format
 
 Filter types for catalogue prep:
-- `nopairs`: remove close pairs within a physical separation (default 0.5 Mpc/h)
+- `nopairs`: remove close pairs within a physical separation (default 0.5 Mpc)
 - `no_src_with_cluster_mask`: source/cluster masking
 - `unfiltered`: no additional cuts
 
