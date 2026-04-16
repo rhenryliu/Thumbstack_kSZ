@@ -7,10 +7,11 @@ import gc
 class ThumbStack(object):
 
 #   def __init__(self, U, Catalog, pathMap="", pathMask="", pathHit="", name="test", nameLong=None, save=False, nProc=1):
-   def __init__(self, U, Catalog, cmbMap, cmbMask, cmbHit=None, name="test", nameLong=None, save=False, nProc=1, 
-                filterTypes='diskring', doStackedMap=False, doMBins=False, doVShuffle=False, doBootstrap=False, 
-                doOnlyFiltering=False, cmbNu=150.e9, cmbUnitLatex=r'$\mu$K', output_dir="/pscratch/sd/b/boryanah/ACTxDESI/output/thumbstack/", 
-                Obs='ksz', wantMF=False, invPowerFunc=None, filterFuncRad=None, apod_pix=20):
+   def __init__(self, U, Catalog, cmbMap, cmbMask, cmbHit=None, name="test", nameLong=None, save=False, nProc=1,
+                filterTypes='diskring', doStackedMap=False, doMBins=False, doVShuffle=False, doBootstrap=False,
+                doOnlyFiltering=False, cmbNu=150.e9, cmbUnitLatex=r'$\mu$K', output_dir="/pscratch/sd/b/boryanah/ACTxDESI/output/thumbstack/",
+                Obs='ksz', wantMF=False, invPowerFunc=None, filterFuncRad=None, apod_pix=20,
+                use_median=False):
       
       self.nProc = nProc
       self.U = U
@@ -29,6 +30,9 @@ class ThumbStack(object):
       self.cmbNu = cmbNu
       self.cmbUnitLatex = cmbUnitLatex
       self.output_dir = output_dir
+      # Diagnostic flag: use median instead of mean in computeStackedProfile.
+      # Set via use_median=True to check sensitivity to outliers.
+      self.use_median = use_median
 
       # aperture photometry filters to implement
       if filterTypes=='diskring':
@@ -1256,7 +1260,15 @@ class ThumbStack(object):
 
       # return the stacked profiles
       if not stackedMap:
-         stack = norm * np.sum(t * weights, axis=0)
+         # Diagnostic: use median instead of mean to check for outlier sensitivity.
+         # The factor weights.shape[0] restores the correct normalisation (median ≈ mean
+         # for a symmetric distribution, so this is consistent with the mean estimator).
+         # sStack is intentionally left unchanged; the approximate noise is sufficient
+         # for this diagnostic comparison.
+         if self.use_median:
+            stack = norm * weights.shape[0] * np.median(t * weights, axis=0)
+         else:
+            stack = norm * np.sum(t * weights, axis=0)
          sStack = norm * np.sqrt(np.sum(s2Full * weights**2, axis=0))
          return stack, sStack
 
