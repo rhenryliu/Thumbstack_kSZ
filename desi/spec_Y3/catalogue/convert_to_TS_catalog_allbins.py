@@ -68,8 +68,9 @@ massConversion = MassConversionKravtsov14()
 out_dir = config['save'].get('save_dir', '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/')
 fig_dir = '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
 
-fields = ['full']  # 'NGC' or 'SGC' or 'full'
-fields = ['NGC', 'SGC', 'full']
+# Fields to convert. Read from config if present (e.g. DES configs set ['SGC_DES', 'SGC_nonDES']);
+# defaults to the standard set for backward compatibility.
+fields = config['processing'].get('fields', ['NGC', 'SGC', 'full'])
 # filter_type = 'no_src_with_cluster_mask'
 
 

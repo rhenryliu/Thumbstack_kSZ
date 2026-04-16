@@ -2,8 +2,8 @@ source:
   main_directory: '/global/cfs/cdirs/desi/survey/catalogs/DA2/'
   post_rec_dir: 'analysis/loa-v1/LSScats/v1.1/BAO/unblinded/desipipe/2pt/recon_sm15_IFFT_recsym/'
   pre_rec_dir: 'LSS/loa-v1/LSScats/v1.1/nonKP/'
-  NGC_fn: 'LRG_NGC_1_clustering.ran.fits'
-  SGC_fn: 'LRG_SGC_1_clustering.ran.fits'
+  NGC_fn: 'LRG_NGC_3_clustering.ran.fits'
+  SGC_fn: 'LRG_SGC_3_clustering.ran.fits'
 
 processing:
   cat_type: 'LRG'
