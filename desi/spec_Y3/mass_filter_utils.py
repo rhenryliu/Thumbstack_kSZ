@@ -76,10 +76,14 @@ def compute_mass_mask(logmstar: np.ndarray, mass_config: dict) -> np.ndarray:
         hi = float(mass_config['max'])
         mask = finite & (logmstar >= lo) & (logmstar < hi)
 
+    elif strategy == 'full':
+        # Keep all objects with finite mass values — no mass cut applied.
+        mask = finite
+
     else:
         raise ValueError(
             f"Unknown mass filter strategy: {strategy!r}. "
-            "Must be one of: 'top_frac', 'percentile_bins', 'cumulative', 'range'."
+            "Must be one of: 'top_frac', 'percentile_bins', 'cumulative', 'range', 'full'."
         )
 
     selected = logmstar[mask]
@@ -133,10 +137,22 @@ def mass_label(mass_config: dict) -> str:
         hi = f"{float(mass_config['max']):.1f}".replace('.', 'p')
         return f'm{lo}to{hi}'
 
+    elif strategy == 'full':
+        # The full sample has no mass-bin subdirectory.  Returning None signals
+        # to the plotting scripts that per-entry path overrides (ksz_path,
+        # ksz_cov_path, esd_path) must be provided in the config instead of
+        # constructing the path from the shared template.
+        # NOTE: do not pass strategy='full' to the lensing or kSZ pipelines —
+        # those should simply omit the 'mass' config section entirely to run on
+        # the full sample.
+        print("[mass_label] strategy='full': returning None. "
+              "Plotting scripts will use per-entry path overrides from the config.")
+        return None # type: ignore[return-value]
+
     else:
         raise ValueError(
             f"Unknown mass filter strategy: {strategy!r}. "
-            "Must be one of: 'top_frac', 'percentile_bins', 'cumulative', 'range'."
+            "Must be one of: 'top_frac', 'percentile_bins', 'cumulative', 'range', 'full'."
         )
 
 
