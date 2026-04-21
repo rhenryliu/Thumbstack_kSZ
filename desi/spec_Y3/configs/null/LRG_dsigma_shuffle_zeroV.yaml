@@ -3,8 +3,8 @@ stack:
   filterType: 'DSigma' # which filter to use for stacking.
   zeroV: true # Whether to use zeroV correction
   shuffle: true # Whether to shuffle the velocities in the catalog for null test
-  shuffle_seed: 100 # Master seed used to generate the list of shuffle seeds (make_stacks_shuffle.py)
-  n_seeds: 50 # Number of shuffle realizations to run (make_stacks_shuffle.py)
+  shuffle_seed: 200 # Master seed used to generate the list of shuffle seeds (make_stacks_shuffle.py)
+  n_seeds: 100 # Number of shuffle realizations to run (make_stacks_shuffle.py)
   bootstrap: false # Covariance method: true=per-seed bootstrap, false=inter-shuffle sample covariance (make_stacks_shuffle.py)
 
 data: # This is the input data for the stack, which will be read in by the stack code
