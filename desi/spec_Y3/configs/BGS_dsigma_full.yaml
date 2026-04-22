@@ -1,7 +1,7 @@
 stack:
   save: true # For whether to save new thumbstack files
   filterType: 'DSigma' # which filter to use for stacking.
-  zeroV: false # Whether to use zeroV correction
+  zeroV: true # Whether to use zeroV correction
 
 data: # This is the input data for the stack, which will be read in by the stack code
   cat_type: 'BGS' # LRG or BGS (maybe ELG later)
@@ -9,9 +9,9 @@ data: # This is the input data for the stack, which will be read in by the stack
   filter_cut: 'no_src_with_cluster_mask' # unfiltered, no_src_with_cluster_mask, or nopairs
   cat_names: # Names for the different catalogues, which will be used to read in the correct files and save the correct output files.
     - 'DESIY3_BGS'
-    - 'DESIY3_BGS_z1'
-    - 'DESIY3_BGS_z2'
-    - 'DESIY3_BGS_z3'
+    # - 'DESIY3_BGS_z1'
+    # - 'DESIY3_BGS_z2'
+    # - 'DESIY3_BGS_z3'
 
   cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues/' # Frank's SPEC Y3 data
   fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/' # Not sure if this is needed for the stack code, but just in case
