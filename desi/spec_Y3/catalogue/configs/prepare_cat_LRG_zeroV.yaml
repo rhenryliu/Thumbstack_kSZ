@@ -4,6 +4,7 @@ source:
   pre_rec_dir: 'LSS/loa-v1/LSScats/v1.1/nonKP/'
   NGC_fn: 'LRG_NGC_clustering.dat.fits'
   SGC_fn: 'LRG_SGC_clustering.dat.fits'
+  mass_cat: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/dr9_extended_lrg_pzbins.fits'
 
 processing:
   cat_type: 'LRG'

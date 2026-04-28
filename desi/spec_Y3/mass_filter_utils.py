@@ -21,7 +21,11 @@ def compute_mass_mask(logmstar: np.ndarray, mass_config: dict) -> np.ndarray:
         logmstar: 1-D array of log10 stellar masses. NaN values are always
             excluded from any selection.
         mass_config: Dict controlling the selection strategy. Required key:
-            ``strategy`` (str). Additional keys depend on the strategy:
+            ``strategy`` (str). Optional key: ``drop_zero_mass`` (bool,
+            default False) — if True, entries with LOGMSTAR == 0 are treated
+            as missing (replaced with NaN) before any selection or percentile
+            calculation. Useful when 0 is a CIGALE sentinel for a failed fit.
+            Additional keys depend on the strategy:
 
             ``'top_frac'``
                 Keep the top *fraction* of objects by mass.
@@ -47,6 +51,12 @@ def compute_mass_mask(logmstar: np.ndarray, mass_config: dict) -> np.ndarray:
         ValueError: If *strategy* is not one of the recognised values.
     """
     logmstar = np.asarray(logmstar, dtype=float)
+    if mass_config.get('drop_zero_mass', False):
+        n_zero = int(np.sum(logmstar == 0))
+        if n_zero:
+            logmstar = logmstar.copy()
+            logmstar[logmstar == 0] = np.nan
+            print(f"[mass filter] drop_zero_mass: replaced {n_zero} zero entries with NaN")
     strategy = mass_config['strategy']
     finite = np.isfinite(logmstar)
 

@@ -40,6 +40,7 @@ post_rec_directory = config['source'].get('post_rec_dir', 'analysis/loa-v1/LSSca
 pre_rec_directory = config['source'].get('pre_rec_dir', 'LSS/loa-v1/LSScats/v1.1/nonKP/')
 NGC_fn = config['source'].get('NGC_fn', 'LRG_NGC_clustering.dat.fits')
 SGC_fn = config['source'].get('SGC_fn', 'LRG_SGC_clustering.dat.fits')
+mass_fn = config['source'].get('mass_cat', None)
 
 cat_type = config['processing'].get('cat_type', 'LRG')
 filter_type = config['processing'].get('filter_type', 'nopairs')
@@ -138,6 +139,27 @@ else:
 
 # Merge the NGC and SGC samples
 pre_rec = pd.concat([pre_rec_NGC, pre_rec_SGC])
+
+
+# Add masses if mass catalog is provided
+if mass_fn is not None:
+    print(f"Adding mass information from {mass_fn}...")
+    dat_bins = Table.read(mass_fn, format='fits')
+    bins = dat_bins.to_pandas()
+    
+    # Keep only what you need to shrink memory
+    bins_reset = bins.reset_index()
+    bins_slim = bins_reset[["TARGETID", "LOGM"]]
+
+    # Make TARGETID a fast lookup index
+    bins_slim = bins_slim.set_index("TARGETID", drop=True)
+
+    # Map is very efficient: O(len(pre_rec)) lookups into the index.
+    # fillna(0) keeps objects with no mass estimate rather than leaving NaN.
+    pre_rec["LOGMSTAR"] = pre_rec["TARGETID"].map(bins_slim["LOGM"]).fillna(0)
+    pre_rec_NGC["LOGMSTAR"] = pre_rec_NGC["TARGETID"].map(bins_slim["LOGM"]).fillna(0)
+    pre_rec_SGC["LOGMSTAR"] = pre_rec_SGC["TARGETID"].map(bins_slim["LOGM"]).fillna(0)
+
 
 # We sort them by redshift
 pre_rec_sort = pd.DataFrame(pre_rec).sort_values("Z")
