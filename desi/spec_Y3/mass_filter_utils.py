@@ -52,11 +52,11 @@ def compute_mass_mask(logmstar: np.ndarray, mass_config: dict) -> np.ndarray:
     """
     logmstar = np.asarray(logmstar, dtype=float)
     if mass_config.get('drop_zero_mass', False):
-        n_zero = int(np.sum(logmstar == 0))
+        n_zero = int(np.sum(logmstar <= 0))
         if n_zero:
             logmstar = logmstar.copy()
-            logmstar[logmstar == 0] = np.nan
-            print(f"[mass filter] drop_zero_mass: replaced {n_zero} zero entries with NaN")
+            logmstar[logmstar <= 0] = np.nan
+            print(f"[mass filter] drop_zero_mass: replaced {n_zero} zero or negative entries with NaN")
     strategy = mass_config['strategy']
     finite = np.isfinite(logmstar)
 

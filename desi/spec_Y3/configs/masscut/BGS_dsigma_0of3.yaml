@@ -33,3 +33,4 @@ mass:
   strategy: 'percentile_bins'
   n_bins: 3
   bin_idx: 0
+  drop_zero_mass: true
