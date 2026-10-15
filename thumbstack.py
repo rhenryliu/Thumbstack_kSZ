@@ -11,7 +11,7 @@ class ThumbStack(object):
                 filterTypes='diskring', doStackedMap=False, doMBins=False, doVShuffle=False, doBootstrap=False,
                 doOnlyFiltering=False, cmbNu=150.e9, cmbUnitLatex=r'$\mu$K', output_dir="/pscratch/sd/b/boryanah/ACTxDESI/output/thumbstack/",
                 Obs='ksz', wantMF=False, invPowerFunc=None, filterFuncRad=None, apod_pix=20,
-                use_median=False):
+                use_median=False, rApMinArcmin=None, rApMaxArcmin=None, nRAp=None):
       
       self.nProc = nProc
       self.U = U
@@ -101,7 +101,7 @@ class ThumbStack(object):
 
       print("- Thumbstack: "+str(self.name))
       
-      self.loadAPRadii(filterTypes)
+      self.loadAPRadii(filterTypes, rApMinArcmin=rApMinArcmin, rApMaxArcmin=rApMaxArcmin, nRAp=nRAp)
       self.loadMMaxBins() # B.H. not using this
       print("loaded mmax")
 
@@ -166,7 +166,22 @@ class ThumbStack(object):
    ##################################################################################
    ##################################################################################
    
-   def loadAPRadii(self, filterTypes=np.array(['diskring'])):
+   def loadAPRadii(self, filterTypes=np.array(['diskring']), rApMinArcmin=None, rApMaxArcmin=None, nRAp=None):
+      '''Set the aperture radii [arcmin] for the requested filter.
+
+      The cutout size (cutoutGeometry) follows rApMaxArcmin.
+
+      Args:
+         filterTypes: Filter type string passed to __init__.
+         rApMinArcmin (float, optional): Smallest radius [arcmin]; overrides the
+            hardcoded evenly spaced grid (diskring, DSigma, upsilon). None keeps it.
+         rApMaxArcmin (float, optional): Largest radius [arcmin]; as above.
+         nRAp (int, optional): Number of radii; as above.
+
+      Raises:
+         ValueError: If an override is given for a filter without an evenly
+            spaced grid (e.g. meanring).
+      '''
 
       if 'diskring' in filterTypes:
          # radii to use for AP filter: comoving Mpc/h
@@ -217,6 +232,21 @@ class ThumbStack(object):
          self.rApMinArcmin = 1.  #0.1   #1.  # 1.
          self.rApMaxArcmin = 6.  #6.  #6.  # 4.
          self.RApArcmin = np.linspace(self.rApMinArcmin, self.rApMaxArcmin, self.nRAp)
+
+      # Optional override of the evenly spaced grid. meanring uses bin edges
+      # (RApArcminBins), so it is not supported.
+      if rApMinArcmin is not None or rApMaxArcmin is not None or nRAp is not None:
+         if not hasattr(self, 'RApArcmin') or hasattr(self, 'RApArcminBins'):
+            raise ValueError("Aperture radius override is only supported for the "
+                             "diskring, DSigma and upsilon filters, got "+str(filterTypes))
+         if rApMinArcmin is not None:
+            self.rApMinArcmin = float(rApMinArcmin)
+         if rApMaxArcmin is not None:
+            self.rApMaxArcmin = float(rApMaxArcmin)
+         if nRAp is not None:
+            self.nRAp = int(nRAp)
+         self.RApArcmin = np.linspace(self.rApMinArcmin, self.rApMaxArcmin, self.nRAp)
+         print("- aperture radii overridden [arcmin]:", self.RApArcmin)
 
    def cutoutGeometry(self, test=False):
       '''Create enmap for the cutouts to be extracted.

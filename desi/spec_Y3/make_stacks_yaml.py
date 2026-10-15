@@ -113,6 +113,10 @@ apod_pix = 20
 # Stack config params; 
 # TODO: move these to the yaml file if we want to change them more easily
 save = stack_config.get('save', False) # if yes calculates delta T anew (saves mask, delta T, maybe vel is separate? but the numbers need to match)
+# Optional aperture grid [arcmin]; without these keys ThumbStack keeps its hardcoded radii.
+apRadii = {key: stack_config[key] for key in ('rApMinArcmin', 'rApMaxArcmin', 'nRAp') if key in stack_config}
+if apRadii:
+    print(f"Aperture grid from config: {apRadii}")
 #save = False # False means use saved stuff
 doBootstrap = True #False #True # do bootstrap or not? (not needed if e.g. shuffling velocities)
 doMBins = False # we don't have mass bins yet
@@ -267,7 +271,8 @@ for i, key in enumerate(catalogs.keys()):
                     wantMF=wantMF,
                     invPowerFunc=invPowerFunc,
                     filterFuncRad=filterFuncRad,
-                    apod_pix=apod_pix)
+                    apod_pix=apod_pix,
+                    **apRadii)
     
     # Now we want to add some code to save the individual stacks
     if extra_config.get('save_individual_stacks', False):
