@@ -1,5 +1,6 @@
 from headers import *
 import gc
+from dsigma_lensing import bins_from_geomean_monotonic, delta_sigma_lensing_weights, gaussian_lensing_bin_profile
 
 ##################################################################################
 ##################################################################################
@@ -39,6 +40,8 @@ class ThumbStack(object):
          self.filterTypes = np.array(['diskring'])
       elif filterTypes=='DSigma':
          self.filterTypes = np.array(['DSigma'])
+      elif filterTypes=='DSigma_lensing':
+         self.filterTypes = np.array(['DSigma_lensing'])
       elif filterTypes=='upsilon':
          self.filterTypes = np.array(['upsilon'])
       elif filterTypes=='meanring':
@@ -49,6 +52,8 @@ class ThumbStack(object):
          self.filterTypes = np.array(['ring'])
       elif filterTypes=='all':
          self.filterTypes = np.array(['diskring', 'disk', 'ring', 'meanring', 'DSigma', 'upsilon'])
+      else:
+         raise ValueError("unknown filterTypes "+repr(filterTypes))
 
       # estimators (ksz, tsz) and weightings (uniform, hit, var, ...)
       # for stacked profiles, bootstrap cov and v-shuffle cov
@@ -101,7 +106,10 @@ class ThumbStack(object):
 
       print("- Thumbstack: "+str(self.name))
       
-      self.loadAPRadii(filterTypes, rApMinArcmin=rApMinArcmin, rApMaxArcmin=rApMaxArcmin, nRAp=nRAp)
+      # pass the parsed array, so the filter names are matched exactly, not as substrings
+      self.loadAPRadii(self.filterTypes, rApMinArcmin=rApMinArcmin, rApMaxArcmin=rApMaxArcmin, nRAp=nRAp)
+      if 'DSigma_lensing' in self.filterTypes:
+         self.loadDSigmaLensingWeights()
       self.loadMMaxBins() # B.H. not using this
       print("loaded mmax")
 
@@ -172,9 +180,10 @@ class ThumbStack(object):
       The cutout size (cutoutGeometry) follows rApMaxArcmin.
 
       Args:
-         filterTypes: Filter type string passed to __init__.
+         filterTypes: Array of filter names (self.filterTypes); matched exactly.
          rApMinArcmin (float, optional): Smallest radius [arcmin]; overrides the
-            hardcoded evenly spaced grid (diskring, DSigma, upsilon). None keeps it.
+            hardcoded evenly spaced grid (diskring, DSigma, DSigma_lensing, upsilon).
+            None keeps it.
          rApMaxArcmin (float, optional): Largest radius [arcmin]; as above.
          nRAp (int, optional): Number of radii; as above.
 
@@ -222,7 +231,7 @@ class ThumbStack(object):
          """
          self.RApArcminBins = np.linspace(self.rApMinArcmin, self.rApMaxArcmin, self.nRAp+1)
          self.RApArcmin = 0.5*(self.RApArcminBins[1:]+self.RApArcminBins[:-1])
-      elif 'DSigma' in filterTypes:
+      elif 'DSigma' in filterTypes or 'DSigma_lensing' in filterTypes:
          self.nRAp = 9
          self.rApMinArcmin = 1.  #0.1   #1.  # 1.
          self.rApMaxArcmin = 6.  #6.  #6.  # 4.
@@ -238,7 +247,7 @@ class ThumbStack(object):
       if rApMinArcmin is not None or rApMaxArcmin is not None or nRAp is not None:
          if not hasattr(self, 'RApArcmin') or hasattr(self, 'RApArcminBins'):
             raise ValueError("Aperture radius override is only supported for the "
-                             "diskring, DSigma and upsilon filters, got "+str(filterTypes))
+                             "diskring, DSigma, DSigma_lensing and upsilon filters, got "+str(filterTypes))
          if rApMinArcmin is not None:
             self.rApMinArcmin = float(rApMinArcmin)
          if rApMaxArcmin is not None:
@@ -247,6 +256,23 @@ class ThumbStack(object):
             self.nRAp = int(nRAp)
          self.RApArcmin = np.linspace(self.rApMinArcmin, self.rApMaxArcmin, self.nRAp)
          print("- aperture radii overridden [arcmin]:", self.RApArcmin)
+
+   def loadDSigmaLensingWeights(self):
+      '''Pixel weights of the 'DSigma_lensing' filter on the cutout grid.
+
+      The filter is the area-weighted mean of DeltaSigma over lensing bins whose
+      geometric-mean centres are the aperture radii RApArcmin, the way the DESI x HSC
+      lensing bins are built (dsigma_lensing.py). Sets RApEdgesArcmin (nRAp+1,) and
+      DSigmaLensingWeights (nRAp, ny, nx) [arcmin^-2] on the cutout grid, whose central
+      pixel is centred on the object. Built once per run: every stamp shares the grid.
+      '''
+      self.RApEdgesArcmin = bins_from_geomean_monotonic(self.RApArcmin, pick='geom')[0]
+      shape = self.cutoutGeometry().shape
+      if shape[0] != shape[1] or shape[0] % 2 != 1:
+         raise ValueError("DSigma_lensing needs a square cutout with a central pixel, got "+str(shape))
+      self.DSigmaLensingWeights = delta_sigma_lensing_weights((shape[0] - 1) // 2, self.resCutoutArcmin,
+                                                              self.RApEdgesArcmin)
+      print("- DSigma_lensing bin edges [arcmin]:", self.RApEdgesArcmin)
 
    def cutoutGeometry(self, test=False):
       '''Create enmap for the cutouts to be extracted.
@@ -539,7 +565,8 @@ class ThumbStack(object):
       norm = np.real(norm)
       return a, 1./norm
 
-   def aperturePhotometryFilter(self, opos, stampMap, stampMask, stampHit, r0, r1, filterType='diskring',  test=False):
+   def aperturePhotometryFilter(self, opos, stampMap, stampMask, stampHit, r0, r1, filterType='diskring',  test=False,
+                                weights=None):
       """Apply an AP filter (disk minus ring) to a stamp map:
       AP = int d^2theta * Filter * map.
       Unit is [map unit * sr]
@@ -554,6 +581,10 @@ class ThumbStack(object):
       filtMask: [mask unit * sr]
       filtHitNoiseStdDev: [1/sqrt(hit unit) * sr], ie [std dev * sr] if [hit map] = inverse var
       diskArea: [sr]
+      For filterType='DSigma_lensing', weights are the filter's pixel weights for this
+      aperture [arcmin^-2] (loadDSigmaLensingWeights), r0 and r1 the bin edges [rad], and
+      filtMap is the lensing-bin mean of DeltaSigma in map units, like 'DSigma'; diskArea is
+      then the area within the inner edge r0, not within the aperture radius.
       """
       # coordinates of the square map in radians
       # zero is at the center of the map
@@ -595,6 +626,12 @@ class ThumbStack(object):
          filterW = inDisk / np.sum(pixArea * inDisk) - inRing / np.sum(pixArea * inRing)
          # The following line makes the filter compensated, uncomment and use if signal is too noisy.
          # filterW -= filterW.mean()  # ensure ∫K dA = 0 numerically
+      elif filterType=='DSigma_lensing':
+         if weights is None:
+            raise ValueError("DSigma_lensing needs the pixel weights (loadDSigmaLensingWeights)")
+         # weights per arcmin^2 -> per sr, so that sum(pixArea * filterW * stampMap) is the
+         # pixel-weighted lensing-bin mean in map units; compensated by construction
+         filterW = weights / (np.pi / 180. / 60.)**2
       elif filterType=='upsilon':
          # TODO: Not done!
          filterW = inDisk / (r0**2) - inRing / (r1**2 - r0**2)
@@ -710,6 +747,10 @@ class ThumbStack(object):
                   r0 = self.RApArcmin[iRAp] / 60. * np.pi/180.
                   # outer ring radius in rad
                   r1 = r0 + dr / 60. * np.pi/180.
+               elif filterType == "DSigma_lensing":
+                  # lensing bin [a, b] around RApArcmin[iRAp]; b bounds the point-source mask
+                  r0 = self.RApEdgesArcmin[iRAp] / 60. * np.pi/180.
+                  r1 = self.RApEdgesArcmin[iRAp+1] / 60. * np.pi/180.
                elif filterType == 'upsilon':
                   # TODO: This is not implemented yet
                   dr = 0.75 # sqrt(0.5) arcmin, TODO: make this an input parameter
@@ -729,7 +770,8 @@ class ThumbStack(object):
                   r1 = 0.25 / 60. * np.pi/180. # 0.5 arcmin
                   filtMap[filterType][iRAp], filtMask[filterType][iRAp], filtHitNoiseStdDev[filterType][iRAp], filtArea[filterType][iRAp] = self.aperturePhotometryFilter(opos, stampMap[iRAp], stampMask, stampHit, r0, r1, filterType=filterType, test=test)
                else:
-                  filtMap[filterType][iRAp], filtMask[filterType][iRAp], filtHitNoiseStdDev[filterType][iRAp], filtArea[filterType][iRAp] = self.aperturePhotometryFilter(opos, stampMap, stampMask, stampHit, r0, r1, filterType=filterType, test=test)
+                  weights = self.DSigmaLensingWeights[iRAp] if filterType == 'DSigma_lensing' else None
+                  filtMap[filterType][iRAp], filtMask[filterType][iRAp], filtHitNoiseStdDev[filterType][iRAp], filtArea[filterType][iRAp] = self.aperturePhotometryFilter(opos, stampMap, stampMask, stampHit, r0, r1, filterType=filterType, test=test, weights=weights)
 
       if test:
          print(" plot the measured profile")
@@ -2480,6 +2522,12 @@ class ThumbStack(object):
       elif filterType=='DSigma' or filterType=='upsilon':
          # This is wrong, just a placeholder since we're not using the theory profile.
          result = np.exp(-0.5*self.RApArcmin**2/sigma_cluster**2) - np.exp(-0.5*(self.RApArcmin*np.sqrt(2.))**2/sigma_cluster**2)
+      elif filterType=='DSigma_lensing':
+         # exact lensing-bin mean of DeltaSigma for a Gaussian of unit integrated flux [1/sr], so that
+         # integrated flux [muK sr] * result is in map units, like filtMap (not between 0 and 1)
+         arcmin = np.pi / 180. / 60.
+         result = gaussian_lensing_bin_profile(self.RApEdgesArcmin, self.RApArcmin, sigma_cluster) \
+                  / (np.pi * (self.RApArcmin * arcmin)**2)
       return result
 
 
