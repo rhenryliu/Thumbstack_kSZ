@@ -17,6 +17,7 @@ from catalog import *
 import thumbstack
 reload(thumbstack)
 from thumbstack import *
+print(f"thumbstack: {thumbstack.__file__}")
 
 import cmb
 reload(cmb)
@@ -44,6 +45,13 @@ import os
 #                          if False, covariance is estimated from the inter-shuffle
 #                          sample covariance divided by N (no bootstrap at all,
 #                          much faster; requires n_seeds >> nRAp for reliability).
+#   load_once    : bool  — if True, build the ThumbStack (and its catalogue mask) once and only
+#                          recompute the stacked profiles for the later seeds; same results,
+#                          without reloading the per-object filtering for every seed.
+#                          Requires bootstrap: false.
+#   save_samples : bool  — also save every seed's stacked profile,
+#                          {filterType}_{est}_shuffle_samples.txt (n_seeds x nRAp).
+#   estimators, filtering_dir, weights: as in make_stacks_yaml.py (completeness-weighted stacks).
 #
 # Output files are the same format as make_stacks_yaml.py:
 #   {filterType}_{est}_measured.txt          — [R, mean_signal, combined_error]
@@ -88,6 +96,15 @@ extra_str = data_config.get('extra_str', f"{field}_{filter_cut}").format(field=f
 shuffle_seed = stack_config.get('shuffle_seed', 42)  # master seed for generating the seed list
 n_seeds = stack_config.get('n_seeds', 10)            # number of shuffle realizations
 doBootstrap = stack_config.get('bootstrap', True)    # covariance method (see module docstring above)
+load_once = stack_config.get('load_once', False)      # build the ThumbStack once (see module docstring above)
+save_samples = stack_config.get('save_samples', False)
+if load_once and doBootstrap:
+    raise ValueError("load_once needs bootstrap: false (the per-seed bootstrap runs in the ThumbStack constructor)")
+estimators = stack_config.get('estimators', None)
+filtering_dir = stack_config.get('filtering_dir', None)
+if filtering_dir is not None:
+    filtering_dir = filtering_dir.format(field=field, filter_cut=filter_cut)
+weights_config = stack_config.get('weights', None)
 
 # Generate n_seeds shuffle seeds from the master seed
 _seed_rng = np.random.default_rng(seed=shuffle_seed)
@@ -164,6 +181,10 @@ if _mass_config is not None:
 else:
     _mlabel = None
     effective_output_dir = output_dir
+if weights_config is not None:
+    if _mass_config is not None:
+        raise ValueError("[weights] not available with the mass filter: apply_catalog_mask does not mask the weights")
+    from weight_utils import load_weights
 
 for i, key in enumerate(catalogs.keys()):
     catalog = catalogs[key]
@@ -192,6 +213,10 @@ for i, key in enumerate(catalogs.keys()):
         apply_catalog_mask(catalog, _mass_mask)
         print(f"[mass filter] {key}: {_n_before} -> {catalog.nObj} objects retained")
 
+    # --- COMPLETENESS WEIGHTS (optional): they stay on the galaxies while the velocities are shuffled ---
+    if weights_config is not None:
+        catalog.wComp = load_weights(weights_config, catalog, key, cat_type, cat_dir, field, filter_cut)
+
     # Save original velocities; restored before each seed so every shuffle
     # starts from the same unmodified vR.
     vR_orig = catalog.vR.copy()
@@ -218,6 +243,15 @@ for i, key in enumerate(catalogs.keys()):
         if Obs == 'tau':
             catalog.vR = catalog.vZ # hiding here info about T_large-scales
 
+        # load_once: the ThumbStack of the first seed already holds this catalogue (ts.Catalog is
+        # catalog, with the velocities just shuffled), its filtering and its mask, which does not
+        # depend on the velocities; computeStackedProfile is what the constructor would run.
+        if load_once and i_seed > 0:
+            for ft in ts.filterTypes:
+                for est in ts.Est:
+                    all_signals[ft + "_" + est].append(ts.computeStackedProfile(ft, est, mask=masks[ft])[0])
+            continue
+
         # Compute and save the CMB temperature decrements (filtMap) only on the
         # first seed; all subsequent seeds load the already-saved filtMap.
         # This avoids redundant cutout extraction, saving significant compute time.
@@ -243,7 +277,12 @@ for i, key in enumerate(catalogs.keys()):
                         wantMF=wantMF,
                         invPowerFunc=invPowerFunc,
                         filterFuncRad=filterFuncRad,
-                        apod_pix=apod_pix)
+                        apod_pix=apod_pix,
+                        estimators=estimators,
+                        filteringDir=filtering_dir)
+        if load_once:
+            masks = {ft: ts.catalogMask(overlap=True, psMask=True, filterType=ft, mVir=[ts.mMin, ts.mMax], z=[0., 100.])
+                     for ft in ts.filterTypes}
 
         # Collect results from this seed's ThumbStack.
         # ts.stackedProfile and ts.covBootstrap are populated by
@@ -265,6 +304,8 @@ for i, key in enumerate(catalogs.keys()):
             result_key = ft + "_" + est
             signals_arr = np.array(all_signals[result_key])  # (n_seeds, nRAp)
             mean_signal = np.mean(signals_arr, axis=0)       # (nRAp,)
+            if save_samples:
+                np.savetxt(ts.pathOut + "/" + ft + "_" + est + "_shuffle_samples.txt", signals_arr)
 
             if doBootstrap:
                 # Covariance of the mean of N independent measurements:
