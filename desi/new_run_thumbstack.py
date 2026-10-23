@@ -107,11 +107,11 @@ cmap = cmbMap(pathMap,
 
 for key in catalogs.keys():
     catalog = catalogs[key]
-    catalog.Mstellar = np.empty_like(catalog.RA)
-    catalog.Mvir = np.empty_like(catalog.RA)
-    catalog.integratedY = np.empty_like(catalog.RA)
-    catalog.integratedKSZ = np.empty_like(catalog.RA)
-    catalog.integratedTau = np.empty_like(catalog.RA)
+    catalog.Mstellar = np.zeros_like(catalog.RA)
+    catalog.Mvir = np.zeros_like(catalog.RA)
+    catalog.integratedY = np.zeros_like(catalog.RA)
+    catalog.integratedKSZ = np.zeros_like(catalog.RA)
+    catalog.integratedTau = np.zeros_like(catalog.RA)
 
     if Obs == 'tau':
         catalog.vR = catalog.vZ # hiding here info about T_large-scales

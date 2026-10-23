@@ -341,7 +341,7 @@ class Catalog(object):
             try:
                self.Mvir = 10.**(data['LOGM']+2.)
             except:
-               self.Mvir = np.empty(self.nObj)
+               self.Mvir = np.zeros(self.nObj)
             try:
                self.vR = data['vR']
             except:
