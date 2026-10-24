@@ -1,8 +1,9 @@
 # Completeness-weighted kSZ stacks: context and plan
 
 *Written 2026-10-23 by the session that made lensing v2.2 in DESIxHSC-Lensing, as the brief for
-the session that will do this work. Status: **plan approved, not started.** Nothing in this repo
-has been changed for it yet. Whether the paper adopts completeness weighting is **not decided**:
+the session that will do this work. Status: **stacks and null tests N1–N4 done for the v2 filter (`DSigma_lensing`),
+2026-10-23, on branch `ksz-compweight`; results, deviations from this plan and the remaining items
+(N5, N6, step 7) in [completeness_weighted_ksz_results.md](completeness_weighted_ksz_results.md).** Whether the paper adopts completeness weighting is **not decided**:
 this work produces the weighted kSZ stacks and their null tests so that the choice can be made.
 The full literature review and the measurements behind this plan are in
 `~/projects/DESIxHSC-Lensing-v2.2/docs/completeness_weights.md` (branch `lensing-v2.2`; on `main`
