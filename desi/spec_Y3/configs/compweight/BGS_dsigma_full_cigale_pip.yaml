@@ -1,0 +1,28 @@
+# Completeness-weighted kSZ, DSigma, BGS CIGALE, full sky, v2 PIP (IIP) weights; objects not in PIP dropped.
+# v1 filter (DSigma): run only when a v1-filter result is asked for; outputs in spec_Y3_DSigma_compweight*.
+stack:
+  save: false # true: filter the map at each object (new per-object files)
+  filterType: 'DSigma'
+  zeroV: true
+  estimators: ['ksz_uniformweight', 'ksz_compweight']
+  filtering_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3/CIGALE/{field}_{filter_cut}_zeroV/' # read only
+  weights: # completeness weight per object, the product of these columns (weight_utils.load_weights)
+    columns: ['WEIGHT_COMP', 'WEIGHT_ZFAIL']
+    file: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/lensing/CIGALE/lens_weights/desi_BGS_bin0.fits' # row aligned with the catalogue
+    join: # take the columns from these catalogues, matched by TARGETID
+      - '/global/cfs/cdirs/desi/survey/catalogs/DA2/LSS/loa-v1/LSScats/v2/PIP/BGS_BRIGHT_NGC_clustering.dat.fits'
+      - '/global/cfs/cdirs/desi/survey/catalogs/DA2/LSS/loa-v1/LSScats/v2/PIP/BGS_BRIGHT_SGC_clustering.dat.fits'
+  save_samples: true
+data:
+  cat_type: 'BGS'
+  field: 'full' # override with --field NGC / SGC
+  filter_cut: 'no_src_with_cluster_mask'
+  cat_names:
+    - 'DESIY3_BGS'
+  cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_CIGALE/{cat_type}_catalogues/'
+  fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+  cat_fn: 'catalog_{field}_{filter_cut}.txt'
+  output_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_compweight_pip/CIGALE/'
+  extra_str: "{field}_{filter_cut}"
+extra:
+  save_individual_stacks: false # its block writes ksz_uniformweight profiles to save_dir
