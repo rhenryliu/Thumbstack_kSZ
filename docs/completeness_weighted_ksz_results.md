@@ -225,8 +225,18 @@ in DESIxHSC-Lensing. All pass:
 ## 6. Not done, open
 
 - **N5** (deprojected ILC maps) and **N6** (footprint homogeneity): not run.
-- **Bootstrap against jackknife for the data stacks** (N2 diagnostic): not checked; a separate
-  decision, since it would change the errors of the published unweighted stacks too.
+- **Bootstrap against jackknife for the data stacks** (N2 diagnostic): checked on 2026-10-25 for the
+  v2 filter (`desi/spec_Y3/checks/data_jackknife.py`, job 60253508; `restack_checks/data_jackknife_20261025.txt`).
+  A delete-one jackknife over 200 contiguous sky patches gives errors ×0.97–1.31 the bootstrap's for
+  the unweighted stacks, growing with aperture (LRG z1 ×1.14–1.28, z2 ×1.06–1.28, z3 ×1.02–1.31,
+  z4 ×0.97–1.13, BGS ×1.11–1.20), and ×0.99–1.23 for the weighted ones; 100 patches agree within
+  noise. Each ratio carries about ±5% (200 patches; ±7% with 100) from the jackknife variance, so
+  ratios of 1.0–1.1 are consistent with the bootstrap; beyond 3′ the unweighted ratios are ×1.16–1.31
+  for LRG z1–z3 and BGS, which is not (LRG z4: ×1.07–1.13). The unweighted S/N against zero falls from 10.04, 10.95, 8.69, 5.41,
+  8.04 (bootstrap) to 8.78, 9.35, 7.76, 5.24, 6.93 (jackknife) for LRG z1–z4 and BGS; the Hartlap
+  factor (0.975 for 200 patches) accounts for 1.3% of the S/N, and the jackknife S/N is noisier
+  still. Whether to adopt jackknife errors is still your decision; it would change the published
+  unweighted errors (v1 filter, not checked) too.
 - **v1 filter (`DSigma`):** configs exist (`*_dsigma_*.yaml`, outputs in `spec_Y3_DSigma_compweight*`)
   but were not run, per your instruction; run them only if a v1-filter result is asked for.
 - **Downstream f_gas** with lensing v2.2 (plan step 7, DESIxHSC-Lensing): done after this doc was
@@ -248,7 +258,8 @@ in DESIxHSC-Lensing. All pass:
 drivers, `load_once` in `make_stacks_shuffle.py`; `desi/spec_Y3/weight_utils.py`; tests. Summary of
 the null tests: `desi/spec_Y3/compweight_nulls.py`. One-off checks, committed 2026-10-25 from the
 worktree's `scratch/`: `desi/spec_Y3/checks/` (`compweight_known_answer.py`, `compweight_n4.py`,
-`cap_filtering_check.py`, `random_diagnostic.py`) and the LRG z3 seed-300 repeat config
+`cap_filtering_check.py`, `random_diagnostic.py`; `data_jackknife.py` added 2026-10-25) and the LRG z3
+seed-300 repeat config
 `desi/spec_Y3/configs/compweight/checks/shuffle_seed300_LRG_dsigma_lensing.yaml`.
 
 ## 8. Files
@@ -260,9 +271,11 @@ Under `/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/`:
 | `spec_Y3_DSigma_lensing_compweight/nulls_summary.txt` | `compweight_nulls.py` output: §3, N1–N3 |
 | `spec_Y3_DSigma_lensing_compweight/n4_weight_controls.txt` | N4, the independent within-sample shuffles |
 | `spec_Y3_DSigma_lensing_compweight/known_answer_LRG_z2-z4.txt` | §2 known answer, LRG z2–z4 (z1 and BGS: log of job 60171703) |
-| `spec_Y3_DSigma_lensing_compweight/cap_filtering_check_LRG.txt` | §2 cap filtering |
+| `spec_Y3_DSigma_lensing_compweight/cap_filtering_check_LRG.txt` | §2 cap filtering, LRG z1–z3 |
+| `spec_Y3_DSigma_lensing_compweight/cap_filtering_check_LRG_z4.txt` | §2 cap filtering, LRG z4 (2026-10-25, job 60253508) |
 | `compweight_checks/shuffle_seed300/summary.txt` | N1 repeat for LRG z3 (a) |
 | `spec_Y3_DSigma_lensing_compweight_random/random_diagnostic.txt` | N2 leakage and jackknife |
+| `restack_checks/data_jackknife_20261025.txt` | §6, jackknife against bootstrap for the data stacks |
 | `compweight_checks/defaults/`, `compweight_checks/shuffle_known_answer_DSigma/` | §2 checks against production |
 
 Logs: `/pscratch/sd/r/rhliu/logs/compweight-A*-*.log`, `cw-bgs-random-60177318.{out,err}`.

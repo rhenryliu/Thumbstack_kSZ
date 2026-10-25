@@ -22,7 +22,7 @@ def compute_mass_mask(logmstar: np.ndarray, mass_config: dict) -> np.ndarray:
             excluded from any selection.
         mass_config: Dict controlling the selection strategy. Required key:
             ``strategy`` (str). Optional key: ``drop_zero_mass`` (bool,
-            default False) — if True, entries with LOGMSTAR == 0 are treated
+            default False) — if True, entries with LOGMSTAR <= 0 are treated
             as missing (replaced with NaN) before any selection or percentile
             calculation. Useful when 0 is a CIGALE sentinel for a failed fit.
             Additional keys depend on the strategy:

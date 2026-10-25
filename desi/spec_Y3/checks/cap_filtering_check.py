@@ -3,7 +3,8 @@ filtering of each NGC/SGC object must equal that object's row in the production 
 (same map, same position), objects matched by their exact RA and DEC.
 
 Usage: python cap_filtering_check.py LRG_z1 [LRG_z4 BGS ...]
-Recorded runs: LRG_z1 to LRG_z3 (cap_filtering_check_LRG.txt), BGS (job 60185347 log).
+Recorded runs: LRG_z1 to LRG_z3 (cap_filtering_check_LRG.txt), BGS (job 60185347 log), LRG_z4
+(cap_filtering_check_LRG_z4.txt, job 60253508).
 """
 import sys
 
