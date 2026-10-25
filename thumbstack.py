@@ -12,7 +12,16 @@ class ThumbStack(object):
                 filterTypes='diskring', doStackedMap=False, doMBins=False, doVShuffle=False, doBootstrap=False,
                 doOnlyFiltering=False, cmbNu=150.e9, cmbUnitLatex=r'$\mu$K', output_dir="/pscratch/sd/b/boryanah/ACTxDESI/output/thumbstack/",
                 Obs='ksz', wantMF=False, invPowerFunc=None, filterFuncRad=None, apod_pix=20,
-                use_median=False, rApMinArcmin=None, rApMaxArcmin=None, nRAp=None):
+                use_median=False, rApMinArcmin=None, rApMaxArcmin=None, nRAp=None,
+                estimators=None, filteringDir=None, nVShuffle=None, saveSamples=False):
+      # Options for the completeness-weighted stacks; their defaults keep the old behaviour:
+      # estimators: list of estimators to compute, bootstrap and (with doVShuffle) shuffle,
+      #    e.g. ['ksz_uniformweight', 'ksz_compweight']; None keeps the lists below.
+      #    'ksz_compweight' needs Catalog.wComp, one completeness weight per object.
+      # filteringDir: read the saved per-object filtering from {filteringDir}/{name}/ (read only,
+      #    e.g. a production stack); everything else is written to output_dir. Not with save=True.
+      # nVShuffle: number of velocity shuffles (None: nSamples).
+      # saveSamples: also save every bootstrap and shuffle realisation of the stacked profile.
       
       self.nProc = nProc
       self.U = U
@@ -74,6 +83,14 @@ class ThumbStack(object):
          self.EstVShuffle = []  
          self.EstMBins = [f'{Obs}_uniformweight']
             
+      if estimators is not None:
+         self.Est = list(estimators)
+         self.EstBootstrap = list(estimators)
+         self.EstVShuffle = list(estimators) if doVShuffle else []
+         self.EstMBins = list(estimators)
+      if 'ksz_compweight' in self.Est and getattr(self.Catalog, 'wComp', None) is None:
+         raise ValueError("ksz_compweight needs the completeness weights in Catalog.wComp")
+
       # resolution of the cutout maps to be extracted
       self.resCutoutArcmin = 0.25   # [arcmin]
       # projection of the cutout maps
@@ -81,6 +98,8 @@ class ThumbStack(object):
 
       # number of samples for bootstraps, shuffles
       self.nSamples = 10000
+      self.nVShuffle = self.nSamples if nVShuffle is None else nVShuffle
+      self.saveSamples = saveSamples
 
       # number of mMax cuts to test,
       # for tSZ contamination to kSZ
@@ -92,8 +111,19 @@ class ThumbStack(object):
 
       # Output path
       self.pathOut = self.output_dir + "/" + self.name
+      if filteringDir is not None and not os.path.isdir(filteringDir + "/" + self.name):
+         raise ValueError("no per-object filtering folder "+filteringDir+"/"+self.name)
       if not os.path.exists(self.pathOut):
          os.makedirs(self.pathOut)
+      # Per-object filtering: read from pathOut, or from the read-only filteringDir
+      if filteringDir is None:
+         self.pathFiltering = self.pathOut
+      else:
+         self.pathFiltering = filteringDir + "/" + self.name
+         if save:
+            raise ValueError("filteringDir is read only: it cannot be combined with save=True")
+         if os.path.realpath(self.pathFiltering) == os.path.realpath(self.pathOut):
+            raise ValueError("filteringDir must differ from output_dir: "+self.pathOut)
 
       # Figures path
       self.pathFig = "./figures/thumbstack/"+self.name
@@ -363,7 +393,7 @@ class ThumbStack(object):
    
    def loadOverlapFlag(self):
       try: # B.H. if it misses overlap just assume youve already done it
-         self.overlapFlag = np.genfromtxt(self.pathOut+"/overlap_flag.txt")
+         self.overlapFlag = np.genfromtxt(self.pathFiltering+"/overlap_flag.txt")
       except:
          self.overlapFlag = np.ones(self.Catalog.nObj, dtype=np.float32)
    
@@ -910,10 +940,13 @@ class ThumbStack(object):
 
       for iFilterType in range(len(self.filterTypes)):
          filterType = self.filterTypes[iFilterType]
-         self.filtMap[filterType] = np.genfromtxt(self.pathOut+"/"+filterType+"_filtmap.txt")
-         self.filtMask[filterType] = np.genfromtxt(self.pathOut+"/"+filterType+"_filtmask.txt")
-         self.filtHitNoiseStdDev[filterType] = np.genfromtxt(self.pathOut+"/"+filterType+"_filtnoisestddev.txt")
-         self.filtArea[filterType] = np.genfromtxt(self.pathOut+"/"+filterType+"_filtarea.txt")
+         self.filtMap[filterType] = np.genfromtxt(self.pathFiltering+"/"+filterType+"_filtmap.txt")
+         self.filtMask[filterType] = np.genfromtxt(self.pathFiltering+"/"+filterType+"_filtmask.txt")
+         self.filtHitNoiseStdDev[filterType] = np.genfromtxt(self.pathFiltering+"/"+filterType+"_filtnoisestddev.txt")
+         self.filtArea[filterType] = np.genfromtxt(self.pathFiltering+"/"+filterType+"_filtarea.txt")
+         if len(self.filtMap[filterType]) != self.Catalog.nObj:
+            raise ValueError(f"{len(self.filtMap[filterType])} rows of filtering in {self.pathFiltering}, "
+                             f"{self.Catalog.nObj} objects in the catalogue")
 
 
    ##################################################################################
@@ -946,6 +979,9 @@ class ThumbStack(object):
             filterType = list(self.filtMask.keys())[0]
          mask *= 1.*(np.abs(self.filtMask[filterType][:,-1])<1.)
          #print("keeping fraction", np.sum(mask)/len(mask), "of objects after PS mask")
+      # objects without a completeness weight (e.g. not in the PIP catalogue)
+      if getattr(self.Catalog, 'wComp', None) is not None:
+         mask *= np.isfinite(self.Catalog.wComp)
       mask *= extraSelection
       if outlierReject:
          mask = mask.astype(bool)
@@ -1244,6 +1280,9 @@ class ThumbStack(object):
       #print "Shape of s2Hit = ", s2Hit.shape
       # halo masses
       m = ts.Catalog.Mvir[mask]
+      # completeness weights: resampled with the objects, kept on them when velocities are shuffled
+      if est=='ksz_compweight':
+         w = ts.Catalog.wComp[mask]
 
       if iBootstrap is not None:
          # make sure each resample is independent,
@@ -1262,6 +1301,8 @@ class ThumbStack(object):
          s2Hit = s2Hit[J,:]
          s2Full = s2Full[J,:]
          m = m[J]
+         if est=='ksz_compweight':
+            w = w[J]
          
       if iVShuffle is not None:
          # make sure each shuffling is independent,
@@ -1301,6 +1342,14 @@ class ThumbStack(object):
          weights = v[:,np.newaxis] * np.ones_like(s2Hit)
          #norm = sVTrue / np.sum(v[:,np.newaxis]*weights, axis=0)
          norm = np.std(v) / ts.Catalog.rV / np.sum(v[:,np.newaxis]*weights, axis=0)
+      # kSZ: completeness weights w, with the velocities re-centred on their weighted mean
+      # over the stacked objects, after any resampling or shuffling:
+      # sigma_w / rV * sum w v' T / sum w v'^2, v' = v - <v>_w, sigma_w^2 = sum w v'^2 / sum w
+      elif est=='ksz_compweight':
+         vC = v - np.sum(w * v) / np.sum(w)
+         sW = np.sqrt(np.sum(w * vC**2) / np.sum(w))
+         weights = (w * vC)[:,np.newaxis] * np.ones_like(s2Hit)
+         norm = sW / ts.Catalog.rV / np.sum(vC[:,np.newaxis]*weights, axis=0)
       # kSZ: detector-noise weighted (hit count)
       elif est=='ksz_hitweight' or est=='ksz_anisotropic_hitweight':
          # remove mean temperature
@@ -1758,6 +1807,8 @@ class ThumbStack(object):
       covStack = np.cov(stackSamples, rowvar=False)
       # save it to file
       np.savetxt(self.pathOut+"/cov_"+filterType+"_"+est+"_bootstrap.txt", covStack)
+      if self.saveSamples:
+         np.savetxt(self.pathOut+"/"+filterType+"_"+est+"_bootstrap_samples.txt", stackSamples)
       
 
 
@@ -1849,6 +1900,8 @@ class ThumbStack(object):
       covStack = np.cov(stackSamples, rowvar=False)
       # save it to file
       np.savetxt(self.pathOut+"/cov_"+filterType+"_"+est+"_vshuffle.txt", covStack)
+      if self.saveSamples:
+         np.savetxt(self.pathOut+"/"+filterType+"_"+est+"_vshuffle_samples.txt", stackSamples)
 
       # Null test: measure mean
       data = np.zeros((self.nRAp, 3))
@@ -1942,7 +1995,7 @@ class ThumbStack(object):
          if self.doVShuffle:
             for iEst in range(len(self.EstVShuffle)):
                est = self.EstVShuffle[iEst]
-               self.SaveCovVShuffleStackedProfile(filterType, est, nSamples=self.nSamples, nProc=self.nProc)
+               self.SaveCovVShuffleStackedProfile(filterType, est, nSamples=self.nVShuffle, nProc=self.nProc)
 
 
       # Stacked profiles in mass bins, to check for contamination

@@ -1,0 +1,26 @@
+# Random-position null, DSigma_lensing, LRG bins 1-4: randoms' WEIGHT_COMP only, on the filtering of LRG_dsigma_lensing_random.yaml.
+stack:
+  save: false # true: filter the map at each object (new per-object files)
+  filterType: 'DSigma_lensing'
+  zeroV: true
+  estimators: ['ksz_compweight'] # the unweighted stack is in the WEIGHT_COMP x WEIGHT_ZFAIL run
+  filtering_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_compweight_random/{field}_{filter_cut}_zeroV/' # read only
+  weights: # completeness weight per object, the product of these columns (weight_utils.load_weights)
+    columns: ['WEIGHT_COMP']
+  save_samples: true
+data:
+  cat_type: 'LRG'
+  field: 'full' # override with --field NGC / SGC
+  filter_cut: 'no_src_with_cluster_mask'
+  cat_names:
+    - 'DESIY3_LRG_z1'
+    - 'DESIY3_LRG_z2'
+    - 'DESIY3_LRG_z3'
+    - 'DESIY3_LRG_z4'
+  cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3_random/{cat_type}_catalogues/'
+  fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+  cat_fn: 'catalog_{field}_{filter_cut}.txt'
+  output_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_compweight_random_comp/'
+  extra_str: "{field}_{filter_cut}"
+extra:
+  save_individual_stacks: false # its block writes ksz_uniformweight profiles to save_dir

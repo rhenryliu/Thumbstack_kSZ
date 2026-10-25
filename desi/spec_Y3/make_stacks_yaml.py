@@ -17,6 +17,7 @@ from catalog import *
 import thumbstack
 reload(thumbstack)
 from thumbstack import *
+print(f"thumbstack: {thumbstack.__file__}")
 
 import cmb
 reload(cmb)
@@ -117,10 +118,24 @@ save = stack_config.get('save', False) # if yes calculates delta T anew (saves m
 apRadii = {key: stack_config[key] for key in ('rApMinArcmin', 'rApMaxArcmin', 'nRAp') if key in stack_config}
 if apRadii:
     print(f"Aperture grid from config: {apRadii}")
+# Completeness-weighted stacks (all optional; without these keys the run is unchanged):
+# estimators, e.g. ['ksz_uniformweight', 'ksz_compweight']; filtering_dir, read-only per-object
+# filtering (e.g. a production stack, '{field}' and '{filter_cut}' are filled in); weights, see
+# weight_utils.load_weights; n_vshuffle shuffles with vshuffle: true; save_samples, save every
+# bootstrap and shuffle realisation.
+estimators = stack_config.get('estimators', None)
+filtering_dir = stack_config.get('filtering_dir', None)
+if filtering_dir is not None:
+    filtering_dir = filtering_dir.format(field=field, filter_cut=filter_cut)
+weights_config = stack_config.get('weights', None)
+nVShuffle = stack_config.get('n_vshuffle', None)
+saveSamples = stack_config.get('save_samples', False)
 #save = False # False means use saved stuff
 doBootstrap = True #False #True # do bootstrap or not? (not needed if e.g. shuffling velocities)
 doMBins = False # we don't have mass bins yet
-doVShuffle = False #True # default measurement is False
+doVShuffle = stack_config.get('vshuffle', False) # default measurement is False
+if doVShuffle and estimators is None:
+    raise ValueError("vshuffle needs stack.estimators (the default estimator list shuffles nothing)")
 wantMF = False # default measurement is False
 doOnlyFiltering = False #True # default is False; if True, compute dT decrements and return TESTING!!!!!!!!!!!; the only problem is that.... it doesn't compute covariance only stackedMap; we use this for anisotropic
 
@@ -206,6 +221,10 @@ if _mass_config is not None:
 else:
     _mlabel = None
     effective_output_dir = output_dir
+if weights_config is not None:
+    if _mass_config is not None:
+        raise ValueError("[weights] not available with the mass filter: apply_catalog_mask does not mask the weights")
+    from weight_utils import load_weights
 
 for i, key in enumerate(catalogs.keys()):
     catalog = catalogs[key]
@@ -233,6 +252,10 @@ for i, key in enumerate(catalogs.keys()):
         _n_before = catalog.nObj
         apply_catalog_mask(catalog, _mass_mask)
         print(f"[mass filter] {key}: {_n_before} -> {catalog.nObj} objects retained")
+
+    # --- COMPLETENESS WEIGHTS (optional) ---
+    if weights_config is not None:
+        catalog.wComp = load_weights(weights_config, catalog, key, cat_type, cat_dir, field, filter_cut)
 
     #### CHANGE HERE IF NECESSARY: ZEROING VELOCITY COMPONENT:
     if stack_config.get('zeroV', False):
@@ -272,6 +295,10 @@ for i, key in enumerate(catalogs.keys()):
                     invPowerFunc=invPowerFunc,
                     filterFuncRad=filterFuncRad,
                     apod_pix=apod_pix,
+                    estimators=estimators,
+                    filteringDir=filtering_dir,
+                    nVShuffle=nVShuffle,
+                    saveSamples=saveSamples,
                     **apRadii)
     
     # Now we want to add some code to save the individual stacks

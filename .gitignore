@@ -30,3 +30,6 @@ core
 .vscode/
 Outputs_Perlmutter/
 __pycache__/
+
+# one-off scripts (not committed)
+scratch/
