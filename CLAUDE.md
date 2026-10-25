@@ -8,19 +8,22 @@ This repo contains a DESI-specific analysis pipeline for measuring the kinematic
 
 ## kSZ filter terminology for the DESIxHSC-Lensing f_gas paper (2026-10-23)
 
-- **Default filter** = option C = `DSigma_lensing`, the lensing-matched kSZ filter (the lensing-bin
-  average of ΔΣ on annuli matched to the lensing bins). The production filter from 2026-10-23.
-- **Old filter** = `DSigma`, the current paper draft's filter (mean Σ inside R minus a 0.75′ ring
-  outside R).
-- Never write "paper filter" or "the paper's filter". Write "default filter (option C,
-  `DSigma_lensing`)" or "old filter (`DSigma`)", with the code name, in docs, reports and captions.
-- Option A (the old filter divided by the simulations' B′ beam factor) was rejected on 2026-10-23:
+- **v2 filter** = option C = `DSigma_lensing`, the lensing-matched kSZ filter (the lensing-bin
+  average of ΔΣ on annuli matched to the lensing bins); in SimulationStacker it includes filtering the
+  simulations on ThumbStack-like 0.25′ stamps, as here for the data. The production filter from
+  2026-10-23.
+- **v1 filter** = `DSigma`, the published filter (mean Σ inside R minus a 0.75′ ring outside R).
+- Write "the v2 filter (option C, `DSigma_lensing`)" or "the v1 filter (`DSigma`)", with the code
+  name, in docs, reports and captions. Always write "lensing v2.1" and "the v2 filter" in full, never
+  a bare "v2", since the lensing also has a v2. Never write "paper filter", "the paper's filter",
+  or the interim names "default filter" and "old filter".
+- Option A (the v1 filter divided by the simulations' B′ beam factor) was rejected on 2026-10-23:
   the simulation spread in B′ is too large for a model-independent correction. Do not use or
   suggest it.
-- Make or show old-filter results only when asked for that comparison, and keep them in folders
-  whose names say the filter, never next to default-filter outputs.
+- Make or show v1-filter results only when asked for that comparison, and keep them in folders
+  whose names say the filter, never next to v2-filter outputs.
 - Here the filter is `stack.filterType` (`'DSigma_lensing'` or `'DSigma'`; `diskring` is the CAP
-  filter); the default filter's configs have `dsigma_lensing` in their names.
+  filter); the v2 filter's configs have `dsigma_lensing` in their names.
 
 ## Environment
 
