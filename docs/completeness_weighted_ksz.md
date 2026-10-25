@@ -2,7 +2,7 @@
 
 *Written 2026-10-23 by the session that made lensing v2.2 in DESIxHSC-Lensing, as the brief for
 the session that will do this work. Status: **stacks and null tests N1–N4 done for the v2 filter (`DSigma_lensing`),
-2026-10-23, on branch `ksz-compweight`; results, deviations from this plan and the remaining items
+2026-10-23, on branch `ksz-compweight` (merged into `main` 2026-10-25, `1a9a289`); results, deviations from this plan and the remaining items
 (N5, N6, step 7) in [completeness_weighted_ksz_results.md](completeness_weighted_ksz_results.md).** Whether the paper adopts completeness weighting is **not decided**:
 this work produces the weighted kSZ stacks and their null tests so that the choice can be made.
 The full literature review and the measurements behind this plan are in
@@ -28,8 +28,8 @@ masses). The kSZ samples are ACT-masked (`no_src_with_cluster_mask`). For BGS th
 use the same 2,224,546-row CIGALE file. For LRG the lensing uses the full 1.05M-lens bin-1 sample
 and the kSZ its 597k ACT-masked subset, by design.
 
-**Filters.** `DSigma` (the paper's) and `DSigma_lensing` (lensing-matched annuli, "option C"; the
-current integration). Both have per-object products saved for every stack used below.
+**Filters.** `DSigma` (the v1 filter, the published one) and `DSigma_lensing` (the v2 filter:
+lensing-matched annuli, option C; the current integration). Both have per-object products saved for every stack used below.
 
 **Lensing versions** (DESIxHSC-Lensing docs `lensing_v2*.md`):
 - v2: HSC shear calibration (m, m_sel), n(z) from Choppin de Janvry et al., bug fixes.

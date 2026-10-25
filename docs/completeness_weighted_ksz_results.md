@@ -1,6 +1,7 @@
 # Completeness-weighted kSZ stacks: results and null tests
 
-*Written 2026-10-23 on branch `ksz-compweight` (worktree `~/projects/repos/ThumbStack_kSZ-compweight`),
+*Written 2026-10-23 on branch `ksz-compweight` (worktree `~/projects/repos/ThumbStack_kSZ-compweight`;
+merged into `main` on 2026-10-25, `1a9a289`),
 from the plan in [completeness_weighted_ksz.md](completeness_weighted_ksz.md). All stacks use the
 **v2 filter (`DSigma_lensing`)**; none uses the v1 filter (`DSigma`), except the checks of §2 that
 reproduce production files. Every number below is copied from a file named in [§8](#8-files);
@@ -155,7 +156,7 @@ the weights of the data object whose redshift they copy. χ² of each stack agai
   to ≤ 0.02σ per aperture.
 - **The unweighted LRG z2 failure**, diagnosed afterwards (`random_diagnostic.txt`; the result above
   stands as recorded): every aperture is negative, −1.2σ to −3.2σ, and the weighted stack has the
-  same shape at −1.1σ to −2.5σ, so it is not specific to the weights.
+  same shape at −1.1 to −2.5 times the unweighted stack's error, so it is not specific to the weights.
   - Not the mean-velocity leakage: the stacked randoms' velocities have mean +0.013 σ_v and the mean
     filtered temperature at random positions is −0.006 to −0.032 map units, so the leakage is
     −0.03σ to −0.07σ for LRG z2 and ≤ 0.06σ in the other samples.
@@ -228,7 +229,13 @@ in DESIxHSC-Lensing. All pass:
   decision, since it would change the errors of the published unweighted stacks too.
 - **v1 filter (`DSigma`):** configs exist (`*_dsigma_*.yaml`, outputs in `spec_Y3_DSigma_compweight*`)
   but were not run, per your instruction; run them only if a v1-filter result is asked for.
-- **Downstream f_gas** with lensing v2.2 (plan step 7, DESIxHSC-Lensing): not started.
+- **Downstream f_gas** with lensing v2.2 (plan step 7, DESIxHSC-Lensing): done after this doc was
+  first committed, on 2026-10-24, as one-off copies, with the v2 filter only. f_gas v2.2 (both
+  probes weighted) against v2.1 (neither) in Figures 8, 9, 14 and 16: SimulationStacker's git-ignored
+  `figures/2026-10/10-24/completeness_weights_DSigma_lensing/` (with `completeness_weights_summary.txt`
+  and `fgas_measurements_v2.1_v2.2.csv`); ratio NPZs in `ratio_measurements/spec_Y3_v2.2_compweight/`
+  and `ratio_measurements/compweight_v2.1_v2.2/`; scripts in DESIxHSC-Lensing's git-ignored
+  `scratch/compweight_figs/`. The paper-figure runner does not read them.
 - **r_V for the weighted sample** (D5): open, for B. Hadzhiyska and F. Qu.
 - Nopairs and mass-bin weighted stacks: out of scope (D2); `apply_catalog_mask` does not carry the
   weights, so the drivers refuse weights together with a mass filter.
@@ -239,8 +246,10 @@ in DESIxHSC-Lensing. All pass:
 `filteringDir` (read-only per-object filtering), `nVShuffle`, `saveSamples` in `thumbstack.py`;
 `stack.weights`, `estimators`, `filtering_dir`, `vshuffle`, `n_vshuffle`, `save_samples` in the
 drivers, `load_once` in `make_stacks_shuffle.py`; `desi/spec_Y3/weight_utils.py`; tests. Summary of
-the null tests: `desi/spec_Y3/compweight_nulls.py`. One-off checks (not committed): the worktree's
-`scratch/` (`compweight_known_answer.py`, `compweight_n4.py`, `cap_filtering_check.py`).
+the null tests: `desi/spec_Y3/compweight_nulls.py`. One-off checks, committed 2026-10-25 from the
+worktree's `scratch/`: `desi/spec_Y3/checks/` (`compweight_known_answer.py`, `compweight_n4.py`,
+`cap_filtering_check.py`, `random_diagnostic.py`) and the LRG z3 seed-300 repeat config
+`desi/spec_Y3/configs/compweight/checks/shuffle_seed300_LRG_dsigma_lensing.yaml`.
 
 ## 8. Files
 
