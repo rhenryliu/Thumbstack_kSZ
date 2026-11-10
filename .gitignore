@@ -33,3 +33,6 @@ __pycache__/
 
 # one-off scripts (not committed)
 scratch/
+
+# one-off notes
+NOTES/
