@@ -42,7 +42,7 @@ want_sim = False
 
 parser = argparse.ArgumentParser(description='Process config.')
 parser.add_argument('-p', '--path2config', type=str, default='./configs/BGS_dsigma_full_cigale.yaml', help='Path to the configuration file.')
-parser.add_argument('--filterType', type=str, default=None, help='Override filterType from config (DSigma or diskring).')
+parser.add_argument('--filterType', type=str, default=None, help='Override filterType from config: DSigma_lensing (the v2 filter, the production filter), DSigma (the v1 filter) or diskring (CAP).')
 parser.add_argument('--field', type=str, default=None, help='Override field from config (NGC, SGC, or full).')
 parser.add_argument('--filter-cut', type=str, default=None, help='Override filter_cut from config.')
 parser.add_argument('--cat-type', type=str, default=None, help='Override cat_type from config (LRG or BGS).')
