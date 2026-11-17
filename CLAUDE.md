@@ -8,15 +8,16 @@ This repo contains a DESI-specific analysis pipeline for measuring the kinematic
 
 ## kSZ filter terminology for the DESIxHSC-Lensing f_gas paper (2026-10-23)
 
-- **v2 filter** = option C = `DSigma_lensing`, the lensing-matched kSZ filter (the lensing-bin
+- **v2 filter** = `DSigma_lensing`, the lensing-matched kSZ filter (the lensing-bin
   average of ΔΣ on annuli matched to the lensing bins); in SimulationStacker it includes filtering the
   simulations on ThumbStack-like 0.25′ stamps, as here for the data. The production filter from
   2026-10-23.
 - **v1 filter** = `DSigma`, the published filter (mean Σ inside R minus a 0.75′ ring outside R).
-- Write "the v2 filter (option C, `DSigma_lensing`)" or "the v1 filter (`DSigma`)", with the code
+- Write "the v2 filter (`DSigma_lensing`)" or "the v1 filter (`DSigma`)", with the code
   name, in docs, reports and captions. Always write "lensing v2.1" and "the v2 filter" in full, never
   a bare "v2", since the lensing also has a v2. Never write "paper filter", "the paper's filter",
-  or the interim names "default filter" and "old filter".
+  or the interim names "default filter" and "old filter". Never write "option C" for the v2
+  filter: the old label means nothing to readers.
 - Option A (the v1 filter divided by the simulations' B′ beam factor) was rejected on 2026-10-23:
   the simulation spread in B′ is too large for a model-independent correction. Do not use or
   suggest it.
@@ -189,7 +190,7 @@ Without `REVIEW=1`, the hook exits immediately without reviewing.
 
 ## tSZ extension (branch `tsz`)
 
-The tSZ stacks with the v2 filter (option C, `DSigma_lensing`), started 2026-11-09, are developed
+The tSZ stacks with the v2 filter (`DSigma_lensing`), started 2026-11-09, are developed
 on branch `tsz` in worktrees, never in this checkout:
 
 - `/global/u2/r/rhliu/projects/repos/ThumbStack_kSZ-tsz`: start at its `docs/STATUS.md`; the

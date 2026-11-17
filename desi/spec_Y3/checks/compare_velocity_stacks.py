@@ -1,4 +1,4 @@
-"""LRG kSZ stacks with the v2 filter (option C, DSigma_lensing) using Liam Parker's LiFT velocities (v_lift_R5) against the
+"""LRG kSZ stacks with the v2 filter (DSigma_lensing) using Liam Parker's LiFT velocities (v_lift_R5) against the
 official BAO-reconstruction velocities (2026-11-17; stacks from configs/velocity_dr2/, both on the
 production per-object filtering, so only the velocities differ).
 
@@ -127,7 +127,7 @@ for key in ('a', 'b'):
     axes[0, 0].set_ylabel(r'kSZ profile, v2 filter / $r_V$ [$\mu$K]')
     axes[1, 0].set_ylabel('LiFT $-$ official\n(paired bootstrap;\ncorrelated across $R$)')
     axes[0, 0].legend(fontsize=8)
-    fig.suptitle(f"v2 filter (option C, DSigma_lensing), velocities: ({key}) {CHOICES[key][0]}, LiFT R5 / Abacus r_V;"
+    fig.suptitle(f"v2 filter (DSigma_lensing), velocities: ({key}) {CHOICES[key][0]}, LiFT R5 / Abacus r_V;"
                  " bootstrap errors (lower bounds at large R)")
     fig.tight_layout()
     for ext in ('png', 'pdf'):
