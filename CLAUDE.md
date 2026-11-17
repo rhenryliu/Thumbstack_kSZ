@@ -174,3 +174,16 @@ Stacking outputs land in subdirectories of the `output_dir` specified in the con
 REVIEW=1 git push
 ```
 Without `REVIEW=1`, the hook exits immediately without reviewing.
+
+## tSZ extension (branch `tsz`)
+
+The tSZ stacks with the v2 filter (option C, `DSigma_lensing`), started 2026-11-09, are developed
+on branch `tsz` in worktrees, never in this checkout:
+
+- `/global/u2/r/rhliu/projects/repos/ThumbStack_kSZ-tsz`: start at its `docs/STATUS.md`; the
+  decision log is its `docs/tsz_decisions.md`.
+- `/global/u2/r/rhliu/projects/SimulationStacker-tsz` (SimulationStacker, branch `tsz`).
+- Outputs: `/pscratch/sd/r/rhliu/projects/Weak_lensing/tsz_measurements/ACTxDESI/`.
+
+`NOTES/` here is git-ignored; its `decisions.md` is only a pointer now, and `NOTES/tsz/reports/` holds
+the earlier subagent reports and paper texts.
