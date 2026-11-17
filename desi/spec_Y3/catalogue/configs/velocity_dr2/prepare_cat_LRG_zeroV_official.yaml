@@ -1,0 +1,22 @@
+# Known-answer control for the kSZ stacks with Liam Parker's DR2 velocities: the production (BAO RecSym)
+# velocities run through swap_velocities.py; VEL_LOS_RENORM must equal the production catalogues'.
+source:
+  production_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues_zeroV/' # objects, order and VEL_LOS
+  velocity_column: 'official'
+
+processing:
+  cat_type: 'LRG'
+  filter_type: 'no_src_with_cluster_mask'
+  renorm: true # multiply by D(z)/D(z_eff), as production (the constant-bias reconstruction returns the z_eff displacement)
+  z_eff: 0.780
+  zeroV: true # subtract the mean of each cap in each z bin
+  fields: ['full']
+  zbins:
+    - [0.4, 0.6]
+    - [0.6, 0.8]
+    - [0.8, 0.95]
+    - [0.95, 1.1]
+
+save:
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues_zeroV_vel_dr2/official/'
+  save_format: 'csv'
