@@ -139,7 +139,9 @@ Subfolders of `desi/spec_Y3/configs/`:
 - `velocity_dr2/`: LRG stacks with the v2 filter using Liam Parker's DR2 LiFT velocities (`v_lift_R5`),
   and the official-velocity control, both on the production per-object filtering (`filtering_dir`);
   their catalogues come from `catalogue/swap_velocities.py` with `catalogue/configs/velocity_dr2/`, and
-  `checks/compare_velocity_stacks.py` compares the two
+  `checks/compare_velocity_stacks.py` compares the two. The NGC/SGC split (`*_caps.yaml`, run with
+  `--field NGC` and `--field SGC`, on the per-object cap filtering of `spec_Y3_DSigma_lensing_compweight/`)
+  is compared in `checks/compare_velocity_caps.py`
 
 ### Catalogue preparation config
 

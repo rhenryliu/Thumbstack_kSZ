@@ -1,0 +1,28 @@
+# One cap (--field NGC / SGC) of the stacks with Liam Parker's DR2 velocities (v_lift_R5), v2 filter, on the
+# per-object cap filtering of the completeness-weight cap run (its unweighted cap stacks equal production's).
+# Run both caps for both velocity sets; compare in checks/compare_velocity_caps.py.
+stack:
+  save: false # filtering read from filtering_dir
+  filterType: 'DSigma_lensing'
+  zeroV: true
+  estimators: ['ksz_uniformweight']
+  filtering_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_compweight/{field}_{filter_cut}_zeroV/' # read only
+  save_samples: true # bootstrap realisations, seeded per sample: the same resamples in every velocity run
+
+data:
+  cat_type: 'LRG'
+  field: 'NGC' # override with --field SGC
+  filter_cut: 'no_src_with_cluster_mask'
+  cat_names:
+    - 'DESIY3_LRG_z1'
+    - 'DESIY3_LRG_z2'
+    - 'DESIY3_LRG_z3'
+    - 'DESIY3_LRG_z4'
+  cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/{cat_type}_catalogues_zeroV_vel_dr2/v_lift_R5/'
+  fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+  cat_fn: 'catalog_{field}_{filter_cut}.txt'
+  output_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_vel_dr2/v_lift_R5/'
+  extra_str: "{field}_{filter_cut}"
+
+extra:
+  save_individual_stacks: false # its block reads the production-style catalogue, not this one
