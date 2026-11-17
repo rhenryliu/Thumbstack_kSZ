@@ -135,6 +135,10 @@ Subfolders of `desi/spec_Y3/configs/`:
 - `null/`: random-position and shuffled-velocity nulls
 - `ext10/`, `DES/`: extended-aperture and DES/non-DES footprint variants
 - `tests/`: the median-estimator diagnostic (`make_stacks_median.py`); `old/`: superseded configs
+- `velocity_dr2/`: LRG stacks with the v2 filter using Liam Parker's DR2 LiFT velocities (`v_lift_R5`),
+  and the official-velocity control, both on the production per-object filtering (`filtering_dir`);
+  their catalogues come from `catalogue/swap_velocities.py` with `catalogue/configs/velocity_dr2/`, and
+  `checks/compare_velocity_stacks.py` compares the two
 
 ### Catalogue preparation config
 
@@ -166,6 +170,14 @@ Filter types for catalogue prep:
 ### Output structure
 
 Stacking outputs land in subdirectories of the `output_dir` specified in the config, organised by catalogue name and CMB map name. The `save=True` flag in the stacking config recomputes and saves temperature decrements; `save=False` loads previously saved ones.
+
+The LiFT-velocity stacks (`configs/velocity_dr2/`) are kept apart from the production ones. The LiFT
+fields are unpublished, so these folders are private (mode 700) and not shared further:
+- velocities shared by Liam: `/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/velocity_recon/ksz_lrg_dr2_20261117/`
+  (its `targetid` was rounded through float64: match on `source_row`, as `swap_velocities.py` does)
+- catalogues: `/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues_zeroV_vel_dr2/{official,v_lift_R5}/`
+- stacks: `/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_vel_dr2/{official,v_lift_R5}/`
+- comparison: `/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/vel_dr2/`
 
 ## Pre-push code review hook
 
