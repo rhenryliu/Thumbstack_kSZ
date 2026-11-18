@@ -24,12 +24,14 @@ checks/random_diagnostic.py), so the chi2 of tests 2 and 3 are upper bounds and 
 Profiles are in map units (uK).
 
 Recorded run: 2026-11-17, on the cap stacks of interactive job 61499189; output in
-figs/vel_dr2/compare_velocity_caps.txt and compare_velocity_caps.{png,pdf}.
+/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/vel_dr2/compare_velocity_caps.txt and compare_velocity_caps.{png,pdf},
+since moved to desi/figures/2026-11/11-17/.
 
 Usage: python compare_velocity_caps.py [--out DIR]   (login node; writes a figure and a summary)
 """
 import argparse
 import os
+from datetime import date
 import sys
 
 import matplotlib
@@ -95,7 +97,9 @@ def amplitude(p_off, s_off, p_lift, s_lift, n_mc=2000, seed=1):
 
 
 parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-parser.add_argument('--out', default='/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/vel_dr2/', help='Output folder.')
+# desi/figures/YYYY-MM/MM-DD/ of the run date (git-ignored)
+FIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'figures', date.today().strftime('%Y-%m/%m-%d'))
+parser.add_argument('--out', default=FIG_DIR, help='Output folder (default: desi/figures/YYYY-MM/MM-DD/).')
 args = parser.parse_args()
 os.makedirs(args.out, exist_ok=True)
 

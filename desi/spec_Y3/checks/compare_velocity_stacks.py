@@ -19,12 +19,14 @@ checks/random_diagnostic.py), so the chi2 here are upper bounds and the errors o
 Profiles are in map units (uK): the DSigma_lensing filter is a weighted mean, not a sum over sr.
 
 Recorded run: 2026-11-17, on the stacks of interactive job 61495516; output in
-figs/vel_dr2/compare_velocity_stacks.txt and compare_velocity_stacks_{a,b}.{png,pdf}.
+/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/vel_dr2/compare_velocity_stacks.txt and compare_velocity_stacks_{a,b}.{png,pdf},
+since moved to desi/figures/2026-11/11-17/.
 
 Usage: python compare_velocity_stacks.py [--out DIR]   (login node; writes a figure and a summary)
 """
 import argparse
 import os
+from datetime import date
 
 import matplotlib
 matplotlib.use('Agg')
@@ -72,7 +74,9 @@ def compare(p_off, s_off, p_lift, s_lift, rv_off, rv_lift):
 
 
 parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-parser.add_argument('--out', default='/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/vel_dr2/', help='Output folder.')
+# desi/figures/YYYY-MM/MM-DD/ of the run date (git-ignored)
+FIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'figures', date.today().strftime('%Y-%m/%m-%d'))
+parser.add_argument('--out', default=FIG_DIR, help='Output folder (default: desi/figures/YYYY-MM/MM-DD/).')
 args = parser.parse_args()
 os.makedirs(args.out, exist_ok=True)
 
