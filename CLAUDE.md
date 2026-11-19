@@ -16,8 +16,7 @@ This repo contains a DESI-specific analysis pipeline for measuring the kinematic
 - Write "the v2 filter (`DSigma_lensing`)" or "the v1 filter (`DSigma`)", with the code
   name, in docs, reports and captions. Always write "lensing v2.1" and "the v2 filter" in full, never
   a bare "v2", since the lensing also has a v2. Never write "paper filter", "the paper's filter",
-  or the interim names "default filter" and "old filter". Never write "option C" for the v2
-  filter: the old label means nothing to readers.
+  or the interim names "default filter" and "old filter".
 - Option A (the v1 filter divided by the simulations' B′ beam factor) was rejected on 2026-10-23:
   the simulation spread in B′ is too large for a model-independent correction. Do not use or
   suggest it.
