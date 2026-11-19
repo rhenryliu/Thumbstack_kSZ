@@ -1,0 +1,22 @@
+# Boryana Hadzhiyska's in-house MultiGrid RecSym velocities (R = 12.5 Mpc/h, nmesh 1024; the smoothing of her
+# BGS kSZ paper, arXiv:2604.19745) for BGS_BRIGHT-21.35, on the objects of prepare_cat_BGS_BRIGHT-21.35_zeroV.yaml.
+source:
+  production_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues_zeroV_vel_dr2/BGS_BRIGHT-21.35/prepared/' # objects and order
+  velocity_fits: '/global/cfs/cdirs/desi/users/boryanah/reconstruction_DESI/recon/catalog_BGS_BRIGHT-21.35_{cap}_R12.50_nmesh1024_recsym_MG.fits' # matched on exact (RA, DEC, Z)
+  velocity_column: 'vR'
+
+processing:
+  cat_type: 'BGS'
+  filter_type: 'no_src_with_cluster_mask'
+  renorm: false # used as given, as production uses her BGS_BRIGHT-20.2 vR
+  zeroV: true # subtract the mean of each cap in each z bin
+  fields: ['full', 'NGC', 'SGC'] # full-sky stacks and the NGC/SGC consistency test
+  zbins:
+    - [0.1, 0.2]
+    - [0.2, 0.3]
+    - [0.3, 0.4]
+    - [0.1, 0.4] # bin 4: the whole range, 0.1-0.4
+
+save:
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues_zeroV_vel_dr2/BGS_BRIGHT-21.35/boryana_MG/'
+  save_format: 'csv'

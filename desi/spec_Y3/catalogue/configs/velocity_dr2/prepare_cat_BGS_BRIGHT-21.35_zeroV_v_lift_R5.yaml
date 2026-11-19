@@ -1,0 +1,23 @@
+# LiFT velocities (v_lift_R5) from Liam Parker's BGS share (ksz_bgs_dr2_20261119, unpublished: keep private)
+# on the BGS_BRIGHT-21.35 objects of prepare_cat_BGS_BRIGHT-21.35_zeroV.yaml, for the kSZ stacks with the v2 filter.
+source:
+  production_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues_zeroV_vel_dr2/BGS_BRIGHT-21.35/prepared/' # objects and order
+  velocity_npz: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/velocity_recon/ksz_bgs_dr2_20261119/desi/galaxies.npz'
+  clustering_fits: '/global/cfs/cdirs/desi/survey/catalogs/DA2/LSS/loa-v1/LSScats/v1.1/nonKP/BGS_BRIGHT-21.35_{cap}_clustering.dat.fits' # exact TARGETID at source_row
+  velocity_column: 'v_lift_R5'
+
+processing:
+  cat_type: 'BGS'
+  filter_type: 'no_src_with_cluster_mask'
+  renorm: false # LiFT velocities already carry D(z) (flat slope against v_halo on the HalfDome lightcones)
+  zeroV: true # subtract the mean of each cap in each z bin
+  fields: ['full', 'NGC', 'SGC'] # full-sky stacks and the NGC/SGC consistency test
+  zbins:
+    - [0.1, 0.2]
+    - [0.2, 0.3]
+    - [0.3, 0.4]
+    - [0.1, 0.4] # bin 4: the whole range, 0.1-0.4
+
+save:
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues_zeroV_vel_dr2/BGS_BRIGHT-21.35/v_lift_R5/'
+  save_format: 'csv'
