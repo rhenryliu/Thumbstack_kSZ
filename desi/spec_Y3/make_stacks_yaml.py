@@ -122,12 +122,14 @@ if apRadii:
 # estimators, e.g. ['ksz_uniformweight', 'ksz_compweight']; filtering_dir, read-only per-object
 # filtering (e.g. a production stack, '{field}' and '{filter_cut}' are filled in); weights, see
 # weight_utils.load_weights; n_vshuffle shuffles with vshuffle: true; save_samples, save every
-# bootstrap and shuffle realisation.
+# bootstrap and shuffle realisation. mstar_weights: stellar-mass weights of 'ksz_mstarweight', see
+# weight_utils.load_mstar_weights.
 estimators = stack_config.get('estimators', None)
 filtering_dir = stack_config.get('filtering_dir', None)
 if filtering_dir is not None:
     filtering_dir = filtering_dir.format(field=field, filter_cut=filter_cut)
 weights_config = stack_config.get('weights', None)
+mstar_weights_config = stack_config.get('mstar_weights', None)
 nVShuffle = stack_config.get('n_vshuffle', None)
 saveSamples = stack_config.get('save_samples', False)
 #save = False # False means use saved stuff
@@ -225,6 +227,13 @@ if weights_config is not None:
     if _mass_config is not None:
         raise ValueError("[weights] not available with the mass filter: apply_catalog_mask does not mask the weights")
     from weight_utils import load_weights
+if mstar_weights_config is not None:
+    if _mass_config is not None:
+        raise ValueError("[mstar weights] not available with the mass filter: apply_catalog_mask does not mask the weights")
+    # the objects without a stellar mass are dropped from every estimator: only with ksz_mstarweight
+    if not estimators or 'ksz_mstarweight' not in estimators:
+        raise ValueError("[mstar weights] set, but 'ksz_mstarweight' is not in stack.estimators")
+    from weight_utils import load_mstar_weights
 
 for i, key in enumerate(catalogs.keys()):
     catalog = catalogs[key]
@@ -256,6 +265,9 @@ for i, key in enumerate(catalogs.keys()):
     # --- COMPLETENESS WEIGHTS (optional) ---
     if weights_config is not None:
         catalog.wComp = load_weights(weights_config, catalog, key, cat_type, cat_dir, field, filter_cut)
+    # --- STELLAR-MASS WEIGHTS (optional) ---
+    if mstar_weights_config is not None:
+        catalog.wMstar = load_mstar_weights(mstar_weights_config, catalog, key, cat_type, cat_dir, field, filter_cut)
 
     #### CHANGE HERE IF NECESSARY: ZEROING VELOCITY COMPONENT:
     if stack_config.get('zeroV', False):

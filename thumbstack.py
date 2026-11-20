@@ -5,6 +5,9 @@ from dsigma_lensing import bins_from_geomean_monotonic, delta_sigma_lensing_weig
 ##################################################################################
 ##################################################################################
 
+# weighted kSZ estimators and the Catalog attribute holding their per-object weights
+KSZ_WEIGHT_ATTR = {'ksz_compweight': 'wComp', 'ksz_mstarweight': 'wMstar'}
+
 class ThumbStack(object):
 
 #   def __init__(self, U, Catalog, pathMap="", pathMask="", pathHit="", name="test", nameLong=None, save=False, nProc=1):
@@ -17,7 +20,8 @@ class ThumbStack(object):
       # Options for the completeness-weighted stacks; their defaults keep the old behaviour:
       # estimators: list of estimators to compute, bootstrap and (with doVShuffle) shuffle,
       #    e.g. ['ksz_uniformweight', 'ksz_compweight']; None keeps the lists below.
-      #    'ksz_compweight' needs Catalog.wComp, one completeness weight per object.
+      #    'ksz_compweight' needs Catalog.wComp, one completeness weight per object;
+      #    'ksz_mstarweight' (same estimator) needs Catalog.wMstar, one stellar-mass weight per object.
       # filteringDir: read the saved per-object filtering from {filteringDir}/{name}/ (read only,
       #    e.g. a production stack); everything else is written to output_dir. Not with save=True.
       # nVShuffle: number of velocity shuffles (None: nSamples).
@@ -88,8 +92,9 @@ class ThumbStack(object):
          self.EstBootstrap = list(estimators)
          self.EstVShuffle = list(estimators) if doVShuffle else []
          self.EstMBins = list(estimators)
-      if 'ksz_compweight' in self.Est and getattr(self.Catalog, 'wComp', None) is None:
-         raise ValueError("ksz_compweight needs the completeness weights in Catalog.wComp")
+      for est, attr in KSZ_WEIGHT_ATTR.items():
+         if est in self.Est and getattr(self.Catalog, attr, None) is None:
+            raise ValueError(f"{est} needs the per-object weights in Catalog.{attr}")
 
       # resolution of the cutout maps to be extracted
       self.resCutoutArcmin = 0.25   # [arcmin]
@@ -980,8 +985,9 @@ class ThumbStack(object):
          mask *= 1.*(np.abs(self.filtMask[filterType][:,-1])<1.)
          #print("keeping fraction", np.sum(mask)/len(mask), "of objects after PS mask")
       # objects without a completeness weight (e.g. not in the PIP catalogue)
-      if getattr(self.Catalog, 'wComp', None) is not None:
-         mask *= np.isfinite(self.Catalog.wComp)
+      for attr in KSZ_WEIGHT_ATTR.values():
+         if getattr(self.Catalog, attr, None) is not None:
+            mask *= np.isfinite(getattr(self.Catalog, attr))
       mask *= extraSelection
       if outlierReject:
          mask = mask.astype(bool)
@@ -1280,9 +1286,9 @@ class ThumbStack(object):
       #print "Shape of s2Hit = ", s2Hit.shape
       # halo masses
       m = ts.Catalog.Mvir[mask]
-      # completeness weights: resampled with the objects, kept on them when velocities are shuffled
-      if est=='ksz_compweight':
-         w = ts.Catalog.wComp[mask]
+      # per-object weights: resampled with the objects, kept on them when velocities are shuffled
+      if est in KSZ_WEIGHT_ATTR:
+         w = getattr(ts.Catalog, KSZ_WEIGHT_ATTR[est])[mask]
 
       if iBootstrap is not None:
          # make sure each resample is independent,
@@ -1301,7 +1307,7 @@ class ThumbStack(object):
          s2Hit = s2Hit[J,:]
          s2Full = s2Full[J,:]
          m = m[J]
-         if est=='ksz_compweight':
+         if est in KSZ_WEIGHT_ATTR:
             w = w[J]
          
       if iVShuffle is not None:
@@ -1342,10 +1348,10 @@ class ThumbStack(object):
          weights = v[:,np.newaxis] * np.ones_like(s2Hit)
          #norm = sVTrue / np.sum(v[:,np.newaxis]*weights, axis=0)
          norm = np.std(v) / ts.Catalog.rV / np.sum(v[:,np.newaxis]*weights, axis=0)
-      # kSZ: completeness weights w, with the velocities re-centred on their weighted mean
-      # over the stacked objects, after any resampling or shuffling:
+      # kSZ: per-object weights w (completeness or stellar mass), with the velocities re-centred
+      # on their weighted mean over the stacked objects, after any resampling or shuffling:
       # sigma_w / rV * sum w v' T / sum w v'^2, v' = v - <v>_w, sigma_w^2 = sum w v'^2 / sum w
-      elif est=='ksz_compweight':
+      elif est in KSZ_WEIGHT_ATTR:
          vC = v - np.sum(w * v) / np.sum(w)
          sW = np.sqrt(np.sum(w * vC**2) / np.sum(w))
          weights = (w * vC)[:,np.newaxis] * np.ones_like(s2Hit)

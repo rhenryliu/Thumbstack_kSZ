@@ -1,4 +1,4 @@
-"""Tests of the completeness-weighted kSZ estimator 'ksz_compweight' (thumbstack.py) and of the
+"""Tests of the weighted kSZ estimators 'ksz_compweight' and 'ksz_mstarweight' (thumbstack.py) and of the
 weight reader desi/spec_Y3/weight_utils.py.
 
 The estimator is sigma_w / rV * sum w v' T / sum w v'^2, with v' = v - <v>_w over the stacked
@@ -220,3 +220,81 @@ def test_join_keeps_large_targetids_distinct(tmp_path):
     w = weight_utils.load_weights(cfg, cat, 'DESIY3_BGS', 'BGS', '', 'full', 'x')
     assert np.isnan(w[0]) and np.all(np.isfinite(w[1:]))
     np.testing.assert_allclose(w[1:], (df['WEIGHT_COMP'] * df['WEIGHT_ZFAIL']).values[:-1], rtol=1e-15)
+
+
+# --- ksz_mstarweight: the same estimator, with the stellar-mass weights in Catalog.wMstar ---
+
+def mstar_stub(t, vR, w):
+    st = stub(t, vR)
+    st.Catalog.wMstar = w
+    return st
+
+
+def test_mstarweight_matches_reference(thumbstack):
+    t, vR, w, mask = make_catalogue()
+    got = stack(thumbstack, mstar_stub(t, vR, w), 'ksz_mstarweight', mask)
+    np.testing.assert_allclose(got, reference(t[mask], vR[mask], w[mask]), rtol=1e-12)
+    for kw in ({'iBootstrap': 7}, {'iVShuffle': 3}):
+        a = stack(thumbstack, mstar_stub(t, vR, w), 'ksz_mstarweight', mask, **kw)
+        b = stack(thumbstack, stub(t, vR, w), 'ksz_compweight', mask, **kw)
+        np.testing.assert_array_equal(a, b)
+
+
+def test_mstarweight_reads_its_own_weights(thumbstack):
+    """With both weights on the catalogue, each estimator uses its own."""
+    t, vR, w, mask = make_catalogue()
+    st = mstar_stub(t, vR, w)
+    st.Catalog.wComp = np.ones(len(vR))
+    np.testing.assert_allclose(stack(thumbstack, st, 'ksz_mstarweight', mask),
+                               reference(t[mask], vR[mask], w[mask]), rtol=1e-12)
+    np.testing.assert_allclose(stack(thumbstack, st, 'ksz_compweight', mask),
+                               reference(t[mask], vR[mask], np.ones(mask.sum())), rtol=1e-12)
+
+
+def test_catalogue_mask_drops_objects_without_mstar_weight(thumbstack):
+    t, vR, w, _ = make_catalogue()
+    st = stub(t, vR)
+    st.overlapFlag = np.ones(len(vR))
+    st.filtMask = {FT: np.zeros_like(t)}
+    mask_all = thumbstack.ThumbStack.catalogMask(st, filterType=FT, outlierReject=False)
+    st.Catalog.wMstar = w.copy()
+    st.Catalog.wMstar[5:15] = np.nan
+    mask_nan = thumbstack.ThumbStack.catalogMask(st, filterType=FT, outlierReject=False)
+    assert not mask_nan[5:15].any()
+    np.testing.assert_array_equal(np.delete(mask_nan, np.s_[5:15]), np.delete(mask_all, np.s_[5:15]))
+
+
+def write_mass_table(path, n=50, seed=3):
+    df, cat = write_table(path, n, seed)
+    rng = np.random.default_rng(seed)
+    df['LOGMSTAR'] = rng.uniform(10., 12., n)
+    df.loc[[2, 7], 'LOGMSTAR'] = 0.  # failed fits
+    df.loc[11, 'LOGMSTAR'] = -1.
+    df.to_csv(path, index=False)
+    return df, cat
+
+
+def test_load_mstar_weights_known_answer(tmp_path):
+    df, cat = write_mass_table(tmp_path / 'cat.csv')
+    w = weight_utils.load_mstar_weights({'file': str(tmp_path / 'cat.csv'), 'power': '2/3'},
+                                        cat, 'DESIY3_BGS', 'BGS', '', 'full', 'x')
+    bad = np.zeros(len(df), bool)
+    bad[[2, 7, 11]] = True
+    assert np.all(np.isnan(w[bad]))
+    np.testing.assert_allclose(w[~bad], (10.**df['LOGMSTAR'].values[~bad])**(2. / 3.), rtol=1e-13)
+    w_float = weight_utils.load_mstar_weights({'file': str(tmp_path / 'cat.csv'), 'power': 2. / 3.},
+                                              cat, 'DESIY3_BGS', 'BGS', '', 'full', 'x')
+    np.testing.assert_array_equal(w, w_float)
+
+
+def test_load_mstar_weights_default_path_and_alignment(tmp_path):
+    df, cat = write_mass_table(tmp_path / 'SGC_zbin2_x.csv')
+    w = weight_utils.load_mstar_weights({'power': 1}, cat, 'DESIY3_LRG_z2', 'LRG', str(tmp_path), 'SGC', 'x')
+    ok = df['LOGMSTAR'].values > 0
+    np.testing.assert_allclose(w[ok], 10.**df['LOGMSTAR'].values[ok], rtol=1e-13)
+    shifted = types.SimpleNamespace(RA=np.roll(cat.RA, 1), DEC=cat.DEC, Z=cat.Z, nObj=cat.nObj)
+    with pytest.raises(ValueError, match='RA'):
+        weight_utils.load_mstar_weights({'power': 1}, shifted, 'DESIY3_LRG_z2', 'LRG', str(tmp_path), 'SGC', 'x')
+    df.assign(LOGMSTAR=0.).to_csv(tmp_path / 'SGC_zbin2_x.csv', index=False)
+    with pytest.raises(ValueError, match='no object has a valid'):
+        weight_utils.load_mstar_weights({'power': 1}, cat, 'DESIY3_LRG_z2', 'LRG', str(tmp_path), 'SGC', 'x')
