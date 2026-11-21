@@ -7,7 +7,11 @@ convert_to_TS_catalog.py then writes the ThumbStack catalogues from the same con
 
 velocity_column:
     'official': the production VEL_LOS (BAO RecSym reconstruction), the known-answer control: with
-        renorm and zeroV it must reproduce the production VEL_LOS_RENORM.
+        renorm and zeroV it must reproduce the production VEL_LOS_RENORM (re-zeroed per zero_within group for
+        the bins listed there).
+
+processing.zero_within (optional, {bin: [[z_lo, z_hi], ...]} tiling that bin): zero the bin per cap within each
+sub-range z_lo < z <= z_hi instead of over the whole bin.
     any column of velocity_npz (e.g. 'v_lift_R5'): per-galaxy velocities shared by Liam Parker
         (ksz_lrg_dr2_20261117, ksz_bgs_dr2_20261119). Their targetid column was rounded through float64, so
         objects are matched on the exact TARGETID read from the clustering catalogues at source_row.
@@ -79,6 +83,23 @@ def coordinate_velocity_table(velocity_fits: str, column: str) -> pd.DataFrame:
     return v
 
 
+def zero_groups(v: np.ndarray, groups: np.ndarray) -> np.ndarray:
+    """Copy of v with the mean of each group subtracted.
+
+    Args:
+        v (numpy.ndarray): velocities.
+        groups (numpy.ndarray): group label of each object (e.g. its cap).
+
+    Returns:
+        numpy.ndarray: the zeroed velocities.
+    """
+    v = v.copy()
+    for g in np.unique(groups):
+        sel = groups == g
+        v[sel] -= np.mean(v[sel])
+    return v
+
+
 parser = argparse.ArgumentParser(description='Swap the velocities of the production catalogues.')
 parser.add_argument('-p', '--path2config', type=str, required=True, help='Path to the configuration file.')
 parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output catalogues.')
@@ -94,6 +115,15 @@ renorm = config['processing'].get('renorm', False)
 z_eff = config['processing'].get('z_eff', 0.780)
 zeroV = config['processing'].get('zeroV', True)
 zbins = [tuple(z) for z in config['processing']['zbins']]
+# optional {bin index: [[z_lo, z_hi], ...]}: zero that bin per cap within each sub-range (z_lo < z <= z_hi)
+zero_within = {int(b): ranges for b, ranges in config['processing'].get('zero_within', {}).items()}
+if zero_within and not zeroV:
+    raise ValueError("processing.zero_within needs zeroV: true")
+for b, ranges in zero_within.items():
+    if b not in range(1, len(zbins) + 1):
+        raise ValueError(f"zero_within bin {b} is not in 1..{len(zbins)}")
+    if any(hi != lo for (_, hi), (lo, _) in zip(ranges[:-1], ranges[1:])) or (ranges[0][0], ranges[-1][1]) != zbins[b - 1]:
+        raise ValueError(f"zero_within[{b}] = {ranges} must tile bin {b} = {zbins[b - 1]} without gaps or overlaps")
 fields = config['processing'].get('fields', ['full'])
 output_dir = config['save']['save_dir']
 
@@ -143,14 +173,25 @@ for field in fields:
             df = df.drop(columns=['DISP_LOS']) # the official displacement, not this velocity's
 
         vel_renorm = vel * cosmo.growth_factor(df['Z'].values) / cosmo.growth_factor(z_eff) if renorm else vel.copy()
-        # zeroV: subtract the mean of each cap within the bin, as prepare_catalogue_yaml.py does
+        # zeroV: subtract the mean of each cap within the bin, as prepare_catalogue_yaml.py does;
+        # with zero_within, of each cap within each listed sub-range of the bin
+        groups = df['GC'].values.astype(str)
+        if i in zero_within:
+            sub = np.full(len(df), -1)
+            for k, (lo, hi) in enumerate(zero_within[i]):
+                sub[(df['Z'].values > lo) & (df['Z'].values <= hi)] = k
+            if (sub < 0).any():
+                raise ValueError(f"{name}: {np.sum(sub < 0)} objects outside the zero_within sub-ranges")
+            groups = np.char.add(np.char.add(groups, '|'), sub.astype(str))
         if zeroV:
-            for gc in np.unique(df['GC']):
-                sel = (df['GC'] == gc).values
-                vel_renorm[sel] -= np.mean(vel_renorm[sel])
+            vel_renorm = zero_groups(vel_renorm, groups)
+            if max(abs(np.mean(vel_renorm[groups == g])) for g in np.unique(groups)) > 1e-8:
+                raise ValueError(f"{name}: a zeroing group has a non-zero mean velocity")
 
         if column == 'official': # known answer, checked on every run
-            np.testing.assert_allclose(vel_renorm, df['VEL_LOS_RENORM'].values, rtol=0, atol=1e-8,
+            # the production VEL_LOS_RENORM is zeroed per cap over the bin; re-zero it per sub-range to compare
+            reference = zero_groups(df['VEL_LOS_RENORM'].values, groups) if i in zero_within else df['VEL_LOS_RENORM'].values
+            np.testing.assert_allclose(vel_renorm, reference, rtol=0, atol=1e-8,
                                        err_msg=f"{name}: official velocities do not reproduce the production VEL_LOS_RENORM")
         df['VEL_LOS'] = vel
         df['VEL_LOS_RENORM'] = vel_renorm

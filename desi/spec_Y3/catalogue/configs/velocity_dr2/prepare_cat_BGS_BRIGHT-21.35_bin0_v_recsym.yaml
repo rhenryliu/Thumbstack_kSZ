@@ -1,0 +1,30 @@
+# Bin 0 (0.1 < z <= 0.4, catalogue z4) of the BGS_BRIGHT-21.35 velocity comparison, zeroed per cap within each
+# 0.1 sub-range (zero_within): zeroing over the whole range leaves sub-range mean velocities that couple to the mean
+# temperature (checks/bgs_bin4_zeroing.py). Bins 1-3 are written too, identical to those of prepare_cat_BGS_BRIGHT-21.35_zeroV_v_recsym.yaml;
+# only bin 4 (bin 0) differs, and only bin 4 is stacked from this folder.
+# Liam Parker's RecSym velocities (v_recsym) from his BGS share (ksz_bgs_dr2_20261119, unpublished: keep private)
+# on the BGS_BRIGHT-21.35 objects of prepare_cat_BGS_BRIGHT-21.35_zeroV.yaml; the set his r_V (0.591) calibrates.
+source:
+  production_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues_zeroV_vel_dr2/BGS_BRIGHT-21.35/prepared/' # objects and order
+  velocity_npz: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/velocity_recon/ksz_bgs_dr2_20261119/desi/galaxies.npz'
+  clustering_fits: '/global/cfs/cdirs/desi/survey/catalogs/DA2/LSS/loa-v1/LSScats/v1.1/nonKP/BGS_BRIGHT-21.35_{cap}_clustering.dat.fits' # exact TARGETID at source_row
+  velocity_column: 'v_recsym'
+
+processing:
+  cat_type: 'BGS'
+  filter_type: 'no_src_with_cluster_mask'
+  renorm: true # multiply by D(z)/D(z_eff), as production does for RecSym (constant-bias reconstruction)
+  z_eff: 0.780 # as prepare_catalogue_yaml.py; a constant factor, cancels in the estimator
+  zeroV: true # subtract the mean of each cap in each z bin
+  fields: ['full', 'NGC', 'SGC'] # full-sky stacks and the NGC/SGC consistency test
+  zbins:
+    - [0.1, 0.2]
+    - [0.2, 0.3]
+    - [0.3, 0.4]
+    - [0.1, 0.4] # bin 4 = bin 0: the whole range, 0.1-0.4
+  zero_within: # zero bin 4 per cap within each sub-range
+    4: [[0.1, 0.2], [0.2, 0.3], [0.3, 0.4]]
+
+save:
+  save_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_catalogues_zeroV_vel_dr2/BGS_BRIGHT-21.35_bin0/v_recsym/'
+  save_format: 'csv'
