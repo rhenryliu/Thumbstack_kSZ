@@ -1,0 +1,66 @@
+# Grid of stellar-mass weightings of the kSZ stack, v2 filter (DSigma_lensing), BGS CIGALE, full sky, on the production per-object filtering.
+# w = M*^p, or M*^p + M_min^p with M_min the mean (linear) M* of the lowest q of the full-sky catalogue
+# (checks/mstarweight_floor_values.py; LOGMSTAR <= 0 excluded); M* = 10^LOGMSTAR, not log M*. Objects with
+# LOGMSTAR <= 0 are dropped from every estimator. Estimator ksz_mstar_{label} for each label below.
+# Run in three groups into the same folder (every output file is per estimator; only P has the unweighted):
+#   P (the default):  ksz_uniformweight ksz_mstar_p0p67 ksz_mstar_p0p67_floor10
+#   A: --estimators ksz_mstar_p0p33 ksz_mstar_p1p00 ksz_mstar_p0p33_floor10
+#   B: --estimators ksz_mstar_p0p67_floor05 ksz_mstar_p0p67_floor25 ksz_mstar_p1p00_floor10
+# SNR and nulls: checks/mstarweight_grid_snr.py; known answer: checks/mstarweight_known_answer.py --grid
+stack:
+  save: false # filtering read from filtering_dir
+  filterType: 'DSigma_lensing'
+  zeroV: true
+  estimators: ['ksz_uniformweight', 'ksz_mstar_p0p67', 'ksz_mstar_p0p67_floor10'] # group P
+  filtering_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing/CIGALE/{field}_{filter_cut}_zeroV/' # read only
+  mstar_weightings: # label: power, optional floor_logmstar (log10 M_min per catalogue)
+    p0p67:
+      col: 'LOGMSTAR'
+      power: '2/3'
+    p0p67_floor10:
+      col: 'LOGMSTAR'
+      power: '2/3'
+      floor_logmstar: # floor10
+        DESIY3_BGS: 10.0013
+    p0p33:
+      col: 'LOGMSTAR'
+      power: '1/3'
+    p1p00:
+      col: 'LOGMSTAR'
+      power: '1'
+    p0p33_floor10:
+      col: 'LOGMSTAR'
+      power: '1/3'
+      floor_logmstar: # floor10
+        DESIY3_BGS: 10.0013
+    p0p67_floor05:
+      col: 'LOGMSTAR'
+      power: '2/3'
+      floor_logmstar: # floor05
+        DESIY3_BGS: 9.8907
+    p0p67_floor25:
+      col: 'LOGMSTAR'
+      power: '2/3'
+      floor_logmstar: # floor25
+        DESIY3_BGS: 10.2028
+    p1p00_floor10:
+      col: 'LOGMSTAR'
+      power: '1'
+      floor_logmstar: # floor10
+        DESIY3_BGS: 10.0013
+  vshuffle: true # velocities shuffled among the stacked objects (after the catalogue mask)
+  n_vshuffle: 1000
+  save_samples: true
+data:
+  cat_type: 'BGS'
+  field: 'full'
+  filter_cut: 'no_src_with_cluster_mask'
+  cat_names:
+    - 'DESIY3_BGS'
+  cat_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/BGS_CIGALE/{cat_type}_catalogues/'
+  fig_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/figs/'
+  cat_fn: 'catalog_{field}_{filter_cut}.txt'
+  output_dir: '/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_mstarweight_grid/CIGALE/'
+  extra_str: "{field}_{filter_cut}"
+extra:
+  save_individual_stacks: false

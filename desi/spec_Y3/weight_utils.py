@@ -141,17 +141,20 @@ def load_weights(weights_config: dict, catalog, cat_name: str, cat_type: str, ca
 
 def load_mstar_weights(mstar_config: dict, catalog, cat_name: str, cat_type: str, cat_dir: str,
                        field: str, filter_cut: str) -> np.ndarray:
-    """Stellar-mass weight of each catalogue object, w = (M*)^power, as configured in
-    ``stack.mstar_weights``.
+    """Stellar-mass weight of each catalogue object, w = (M*)^power, or with a floor
+    w = (M*)^power + (M_min)^power, as configured in ``stack.mstar_weights`` or in one entry of
+    ``stack.mstar_weightings``.
 
-    The normalisation of w cancels in 'ksz_mstarweight', so the mass units (and factors of h) do
-    not matter. Objects with log10 M* <= 0 (failed fits) or not finite get NaN, which ThumbStack's
+    M* is the linear mass, 10^col. The normalisation of w cancels in the weighted estimator, so the
+    mass units (and factors of h) do not matter, as long as the floor is in the units of col. Objects with log10 M* <= 0 (failed fits) or not finite get NaN, which ThumbStack's
     catalogue mask drops from every estimator of the run.
 
     Args:
         mstar_config: ``power`` (required; a number or a fraction string such as ``'2/3'``);
             ``col`` (log10 stellar mass column, default LOGMSTAR); ``file`` (optional table row
-            aligned with the catalogue, default the intermediate CSV given by get_csv_path).
+            aligned with the catalogue, default the intermediate CSV given by get_csv_path);
+            ``floor_logmstar`` (optional log10 M_min: a number, or a dict keyed by catalogue
+            name; without it, no floor).
         catalog: ThumbStack Catalog the weights are for.
         cat_name, cat_type, cat_dir, field, filter_cut: As for get_csv_path.
 
@@ -159,10 +162,15 @@ def load_mstar_weights(mstar_config: dict, catalog, cat_name: str, cat_type: str
         Array of length ``catalog.nObj``; NaN for objects without a valid stellar mass.
 
     Raises:
-        ValueError: If the table is not row aligned with the catalogue, or no object has a valid
-            stellar mass.
+        ValueError: If the table is not row aligned with the catalogue, no object has a valid
+            stellar mass, or ``floor_logmstar`` has no value for *cat_name*.
     """
     power = float(Fraction(str(mstar_config['power'])))
+    floor = mstar_config.get('floor_logmstar')
+    if isinstance(floor, dict):
+        if cat_name not in floor:
+            raise ValueError(f"[mstar weights] floor_logmstar has no value for {cat_name}")
+        floor = floor[cat_name]
     col = mstar_config.get('col', 'LOGMSTAR')
     path = mstar_config.get('file') or get_csv_path(cat_name, cat_type, cat_dir, field, filter_cut)
     table = read_table(path, ['RA', 'DEC', 'Z', col])
@@ -173,6 +181,9 @@ def load_mstar_weights(mstar_config: dict, catalog, cat_name: str, cat_type: str
         raise ValueError(f"[mstar weights] no object has a valid {col} in {path}")
     w = np.full(len(logm), np.nan)
     w[found] = 10.**(power * logm[found])
-    print(f"[mstar weights] {cat_name}: {col}^{power:.6g} of {path}; {found.sum()} of {len(w)} objects "
+    if floor is not None:
+        w[found] += 10.**(power * float(floor))
+    floor_str = '' if floor is None else f" + M_min^{power:.6g}, log10 M_min {float(floor):.4f}"
+    print(f"[mstar weights] {cat_name}: M*^{power:.6g}{floor_str} from {col} of {path}; {found.sum()} of {len(w)} objects "
           f"with {col} > 0, N_eff/N {np.sum(w[found])**2 / np.sum(w[found]**2) / found.sum():.4f}")
     return w

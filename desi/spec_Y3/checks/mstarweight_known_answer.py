@@ -16,12 +16,20 @@ In it the outlier cut removes the same objects with and without the LOGMSTAR obj
 alone: 0 out, 0 in" for every sample), so the run checks the estimators but cannot tell the order of the
 cuts apart, and the "objects dropped" line equals the total difference by construction. The "mean T of
 dropped / mean T of all" ratio is ill-conditioned where the mean temperature is near zero.
+With --grid: the outputs of configs/mstarweight_grid/ instead, every 'ksz_mstar_{label}' present compared with
+the offline weighted estimator, its weights rebuilt from the config (w = M*^p, or M*^p + M_min^p).
+Recorded --grid run: job 61712037 (log /pscratch/sd/r/rhliu/logs/mstarweight-grid-ka-20261120-191217.log), every
+grid estimator within 5.2e-13 relative of the offline one.
 """
 import argparse
+import glob
+import os
 import sys
+from fractions import Fraction
 
 import numpy as np
 import pandas as pd
+import yaml
 from scipy import optimize, special
 
 sys.path.insert(0, '/global/u2/r/rhliu/projects/DESIxHSC-Lensing/src')
@@ -32,6 +40,8 @@ K = W + 'ksz_measurements/ACTxDESI/'
 FT = 'DSigma_lensing'
 CUT = 'no_src_with_cluster_mask'
 NEW = K + 'spec_Y3_DSigma_lensing_mstarweight/'
+GRID = K + 'spec_Y3_DSigma_lensing_mstarweight_grid/'
+GRID_CONFIGS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'configs', 'mstarweight_grid')
 POWER = 2. / 3.
 SAMPLES = {f'LRG_z{b}': dict(cat=W + f'desi/spec_Y3/LRG_catalogues_zeroV/full_zbin{b}_{CUT}.csv',
                              filt=K + f'spec_Y3_DSigma_lensing/full_{CUT}_zeroV/DESIY3_LRG_z{b}/',
@@ -62,6 +72,24 @@ def wstack(t, v, w):
     return sw * np.sum((w * vp)[:, None] * t, axis=0) / np.sum(w * vp**2)
 
 
+def grid_weightings(name):
+    """The mstar_weightings of the grid config that stacks sample *name*, and its catalogue name."""
+    cfg = {'BGS': 'BGS_dsigma_lensing_full_cigale.yaml'}.get(name, 'LRG_dsigma_lensing_caps.yaml' if name.endswith('GC')
+                                                              else 'LRG_dsigma_lensing_full.yaml')
+    with open(os.path.join(GRID_CONFIGS, cfg)) as f:
+        weightings = yaml.safe_load(f)['stack']['mstar_weightings']
+    return weightings, 'DESIY3_' + name.replace('_NGC', '').replace('_SGC', '')
+
+
+def grid_weight(logm, weighting, cat_name):
+    """w = (10^logm)^p, plus (10^floor)^p with a floor."""
+    p = float(Fraction(str(weighting['power'])))
+    w = 10.**(p * logm)
+    if 'floor_logmstar' in weighting:
+        w = w + 10.**(p * float(weighting['floor_logmstar'][cat_name]))
+    return w
+
+
 def fmt(x, f='{:+.3f}'):
     return ' '.join(f.format(v) for v in x)
 
@@ -69,7 +97,9 @@ def fmt(x, f='{:+.3f}'):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('samples', nargs='*', default=list(SAMPLES))
-    for name in p.parse_args().samples:
+    p.add_argument('--grid', action='store_true', help='check the outputs of configs/mstarweight_grid/')
+    a = p.parse_args()
+    for name in a.samples:
         s = SAMPLES[name]
         cat = pd.read_csv(s['cat'], usecols=['VEL_LOS_RENORM', 'LOGMSTAR'])
         t, fmask = load_per_object_products(s['filt'], FT)
@@ -80,6 +110,22 @@ def main():
         good = np.isfinite(logm) & (logm > 0.)
         new = thumbstack_mask(t, fmask, good)
         old = thumbstack_mask(t, fmask, np.ones(len(t), bool))
+        if a.grid:
+            d = GRID + s['sub']
+            weightings, cat_name = grid_weightings(name)
+            print(f"\n=== {name} (grid): {new.sum()} stacked")
+            paths = sorted(glob.glob(d + f'{FT}_ksz_mstar_*_measured.txt'))
+            if not paths:
+                print(f"  no grid outputs in {d}")
+            for path in paths:
+                est = os.path.basename(path)[len(FT) + 1:-len('_measured.txt')]
+                ref = wstack(t[new], v[new], grid_weight(logm[new], weightings[est[len('ksz_mstar_'):]], cat_name))
+                print(f"  {est} vs offline weighted: max rel diff {np.max(np.abs(np.loadtxt(path)[:, 1] / ref - 1)):.2e}")
+            if os.path.exists(d + f'{FT}_ksz_uniformweight_measured.txt'):
+                ts_u = np.loadtxt(d + f'{FT}_ksz_uniformweight_measured.txt')[:, 1]
+                print(f"  ksz_uniformweight vs offline unweighted: max rel diff "
+                      f"{np.max(np.abs(ts_u / ksz_delta_sigma(t[new], v[new]) - 1)):.2e}")
+            continue
         w = 10.**(POWER * logm[new])
         ref_m, ref_u = wstack(t[new], v[new], w), ksz_delta_sigma(t[new], v[new])
         d = NEW + s['sub']

@@ -47,6 +47,7 @@ parser.add_argument('--field', type=str, default=None, help='Override field from
 parser.add_argument('--filter-cut', type=str, default=None, help='Override filter_cut from config.')
 parser.add_argument('--cat-type', type=str, default=None, help='Override cat_type from config (LRG or BGS).')
 parser.add_argument('--cat-names', type=str, nargs='+', default=None, help='Override cat_names from config (space-separated list).')
+parser.add_argument('--estimators', type=str, nargs='+', default=None, help='Override stack.estimators from config (space-separated list).')
 args = vars(parser.parse_args())
 print(f"Arguments: {args}")
 path2config = args['path2config']
@@ -123,13 +124,15 @@ if apRadii:
 # filtering (e.g. a production stack, '{field}' and '{filter_cut}' are filled in); weights, see
 # weight_utils.load_weights; n_vshuffle shuffles with vshuffle: true; save_samples, save every
 # bootstrap and shuffle realisation. mstar_weights: stellar-mass weights of 'ksz_mstarweight', see
-# weight_utils.load_mstar_weights.
-estimators = stack_config.get('estimators', None)
+# weight_utils.load_mstar_weights. mstar_weightings: {label: same keys as mstar_weights}, the
+# weights of the estimators 'ksz_mstar_{label}' listed in estimators (the others are not loaded).
+estimators = args['estimators'] if args['estimators'] is not None else stack_config.get('estimators', None)
 filtering_dir = stack_config.get('filtering_dir', None)
 if filtering_dir is not None:
     filtering_dir = filtering_dir.format(field=field, filter_cut=filter_cut)
 weights_config = stack_config.get('weights', None)
 mstar_weights_config = stack_config.get('mstar_weights', None)
+mstar_weightings = stack_config.get('mstar_weightings', None)
 nVShuffle = stack_config.get('n_vshuffle', None)
 saveSamples = stack_config.get('save_samples', False)
 #save = False # False means use saved stuff
@@ -234,6 +237,22 @@ if mstar_weights_config is not None:
     if not estimators or 'ksz_mstarweight' not in estimators:
         raise ValueError("[mstar weights] set, but 'ksz_mstarweight' is not in stack.estimators")
     from weight_utils import load_mstar_weights
+# the grid estimators 'ksz_mstar_{label}' and their weightings
+mstar_grid = [e for e in (estimators or []) if e.startswith('ksz_mstar_')]
+if mstar_grid or mstar_weightings is not None:
+    if _mass_config is not None:
+        raise ValueError("[mstar weightings] not available with the mass filter: apply_catalog_mask does not mask the weights")
+    # the objects without a stellar mass are dropped from every estimator: only with a grid estimator
+    if not mstar_grid:
+        raise ValueError("[mstar weightings] set, but no 'ksz_mstar_{label}' estimator is in stack.estimators")
+    missing = [e for e in mstar_grid if e[len('ksz_mstar_'):] not in (mstar_weightings or {})]
+    if missing:
+        raise ValueError(f"[mstar weightings] no weighting in stack.mstar_weightings for {missing}")
+    # one mass column for all: the same objects without a mass, so the same mask, in every run of the grid
+    sources = {(w.get('col', 'LOGMSTAR'), w.get('file')) for w in mstar_weightings.values()}
+    if len(sources) > 1:
+        raise ValueError(f"[mstar weightings] all weightings must read the same col and file, not {sources}")
+    from weight_utils import load_mstar_weights
 
 for i, key in enumerate(catalogs.keys()):
     catalog = catalogs[key]
@@ -268,6 +287,9 @@ for i, key in enumerate(catalogs.keys()):
     # --- STELLAR-MASS WEIGHTS (optional) ---
     if mstar_weights_config is not None:
         catalog.wMstar = load_mstar_weights(mstar_weights_config, catalog, key, cat_type, cat_dir, field, filter_cut)
+    if mstar_grid:
+        catalog.kszWeights = {e: load_mstar_weights(mstar_weightings[e[len('ksz_mstar_'):]], catalog, key, cat_type,
+                                                    cat_dir, field, filter_cut) for e in mstar_grid}
 
     #### CHANGE HERE IF NECESSARY: ZEROING VELOCITY COMPONENT:
     if stack_config.get('zeroV', False):

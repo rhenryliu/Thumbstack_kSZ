@@ -298,3 +298,52 @@ def test_load_mstar_weights_default_path_and_alignment(tmp_path):
     df.assign(LOGMSTAR=0.).to_csv(tmp_path / 'SGC_zbin2_x.csv', index=False)
     with pytest.raises(ValueError, match='no object has a valid'):
         weight_utils.load_mstar_weights({'power': 1}, cat, 'DESIY3_LRG_z2', 'LRG', str(tmp_path), 'SGC', 'x')
+
+
+# --- the stellar-mass grid: estimators 'ksz_mstar_{label}', weights in Catalog.kszWeights ---
+
+def test_grid_estimator_matches_reference(thumbstack):
+    t, vR, w, mask = make_catalogue()
+    st = stub(t, vR)
+    w2 = w**2
+    st.Catalog.kszWeights = {'ksz_mstar_a': w, 'ksz_mstar_b': w2}
+    np.testing.assert_allclose(stack(thumbstack, st, 'ksz_mstar_a', mask),
+                               reference(t[mask], vR[mask], w[mask]), rtol=1e-12)
+    np.testing.assert_allclose(stack(thumbstack, st, 'ksz_mstar_b', mask),
+                               reference(t[mask], vR[mask], w2[mask]), rtol=1e-12)
+    for kw in ({'iBootstrap': 7}, {'iVShuffle': 3}):
+        np.testing.assert_array_equal(stack(thumbstack, st, 'ksz_mstar_a', mask, **kw),
+                                      stack(thumbstack, mstar_stub(t, vR, w), 'ksz_mstarweight', mask, **kw))
+
+
+def test_catalogue_mask_drops_objects_without_grid_weight(thumbstack):
+    t, vR, w, _ = make_catalogue()
+    st = stub(t, vR)
+    st.overlapFlag = np.ones(len(vR))
+    st.filtMask = {FT: np.zeros_like(t)}
+    mask_all = thumbstack.ThumbStack.catalogMask(st, filterType=FT, outlierReject=False)
+    a, b = w.copy(), w.copy()
+    a[3:6] = np.nan
+    b[20:22] = np.nan
+    st.Catalog.kszWeights = {'ksz_mstar_a': a, 'ksz_mstar_b': b}
+    mask_nan = thumbstack.ThumbStack.catalogMask(st, filterType=FT, outlierReject=False)
+    bad = np.zeros(len(vR), bool)
+    bad[3:6] = bad[20:22] = True
+    assert not mask_nan[bad].any()
+    np.testing.assert_array_equal(mask_nan[~bad], mask_all[~bad])
+
+
+def test_load_mstar_weights_with_floor(tmp_path):
+    df, cat = write_mass_table(tmp_path / 'cat.csv')
+    ok = df['LOGMSTAR'].values > 0
+    base = {'file': str(tmp_path / 'cat.csv'), 'power': '2/3'}
+    want = 10.**(2. / 3. * df['LOGMSTAR'].values[ok]) + 10.**(2. / 3. * 10.5)
+    w = weight_utils.load_mstar_weights({**base, 'floor_logmstar': 10.5}, cat, 'DESIY3_BGS', 'BGS', '', 'full', 'x')
+    np.testing.assert_allclose(w[ok], want, rtol=1e-13)
+    assert np.all(np.isnan(w[~ok]))
+    w_dict = weight_utils.load_mstar_weights({**base, 'floor_logmstar': {'DESIY3_BGS': 10.5, 'DESIY3_LRG_z1': 11.}},
+                                             cat, 'DESIY3_BGS', 'BGS', '', 'full', 'x')
+    np.testing.assert_array_equal(w, w_dict)
+    with pytest.raises(ValueError, match='no value for DESIY3_BGS'):
+        weight_utils.load_mstar_weights({**base, 'floor_logmstar': {'DESIY3_LRG_z1': 11.}},
+                                        cat, 'DESIY3_BGS', 'BGS', '', 'full', 'x')

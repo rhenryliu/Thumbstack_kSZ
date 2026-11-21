@@ -7,6 +7,18 @@ from dsigma_lensing import bins_from_geomean_monotonic, delta_sigma_lensing_weig
 
 # weighted kSZ estimators and the Catalog attribute holding their per-object weights
 KSZ_WEIGHT_ATTR = {'ksz_compweight': 'wComp', 'ksz_mstarweight': 'wMstar'}
+# stellar-mass weightings of a grid, e.g. 'ksz_mstar_p0p67_floor10': weights in Catalog.kszWeights[est]
+KSZ_MSTAR_PREFIX = 'ksz_mstar_'
+
+def isWeightedKsz(est):
+   '''True for the weighted kSZ estimators (same estimator, per-object weights).'''
+   return est in KSZ_WEIGHT_ATTR or est.startswith(KSZ_MSTAR_PREFIX)
+
+def kszWeights(Catalog, est):
+   '''Per-object weights of the weighted kSZ estimator est, or None if the catalogue has none.'''
+   if est in KSZ_WEIGHT_ATTR:
+      return getattr(Catalog, KSZ_WEIGHT_ATTR[est], None)
+   return getattr(Catalog, 'kszWeights', {}).get(est)
 
 class ThumbStack(object):
 
@@ -92,9 +104,10 @@ class ThumbStack(object):
          self.EstBootstrap = list(estimators)
          self.EstVShuffle = list(estimators) if doVShuffle else []
          self.EstMBins = list(estimators)
-      for est, attr in KSZ_WEIGHT_ATTR.items():
-         if est in self.Est and getattr(self.Catalog, attr, None) is None:
-            raise ValueError(f"{est} needs the per-object weights in Catalog.{attr}")
+      for est in self.Est:
+         if isWeightedKsz(est) and kszWeights(self.Catalog, est) is None:
+            where = KSZ_WEIGHT_ATTR.get(est, f"kszWeights['{est}']")
+            raise ValueError(f"{est} needs the per-object weights in Catalog.{where}")
 
       # resolution of the cutout maps to be extracted
       self.resCutoutArcmin = 0.25   # [arcmin]
@@ -988,6 +1001,8 @@ class ThumbStack(object):
       for attr in KSZ_WEIGHT_ATTR.values():
          if getattr(self.Catalog, attr, None) is not None:
             mask *= np.isfinite(getattr(self.Catalog, attr))
+      for w in getattr(self.Catalog, 'kszWeights', {}).values():
+         mask *= np.isfinite(w)
       mask *= extraSelection
       if outlierReject:
          mask = mask.astype(bool)
@@ -1287,8 +1302,8 @@ class ThumbStack(object):
       # halo masses
       m = ts.Catalog.Mvir[mask]
       # per-object weights: resampled with the objects, kept on them when velocities are shuffled
-      if est in KSZ_WEIGHT_ATTR:
-         w = getattr(ts.Catalog, KSZ_WEIGHT_ATTR[est])[mask]
+      if isWeightedKsz(est):
+         w = kszWeights(ts.Catalog, est)[mask]
 
       if iBootstrap is not None:
          # make sure each resample is independent,
@@ -1307,7 +1322,7 @@ class ThumbStack(object):
          s2Hit = s2Hit[J,:]
          s2Full = s2Full[J,:]
          m = m[J]
-         if est in KSZ_WEIGHT_ATTR:
+         if isWeightedKsz(est):
             w = w[J]
          
       if iVShuffle is not None:
@@ -1351,7 +1366,7 @@ class ThumbStack(object):
       # kSZ: per-object weights w (completeness or stellar mass), with the velocities re-centred
       # on their weighted mean over the stacked objects, after any resampling or shuffling:
       # sigma_w / rV * sum w v' T / sum w v'^2, v' = v - <v>_w, sigma_w^2 = sum w v'^2 / sum w
-      elif est in KSZ_WEIGHT_ATTR:
+      elif isWeightedKsz(est):
          vC = v - np.sum(w * v) / np.sum(w)
          sW = np.sqrt(np.sum(w * vC**2) / np.sum(w))
          weights = (w * vC)[:,np.newaxis] * np.ones_like(s2Hit)
