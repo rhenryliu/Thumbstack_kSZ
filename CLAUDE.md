@@ -173,8 +173,7 @@ Filter types for catalogue prep:
 
 Stacking outputs land in subdirectories of the `output_dir` specified in the config, organised by catalogue name and CMB map name. The `save=True` flag in the stacking config recomputes and saves temperature decrements; `save=False` loads previously saved ones.
 
-The LiFT-velocity stacks (`configs/velocity_dr2/`) are kept apart from the production ones. The LiFT
-fields are unpublished, so these folders are private (mode 700) and not shared further:
+The LiFT-velocity stacks (`configs/velocity_dr2/`) are kept apart from the production ones:
 - velocities shared by Liam: `/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/velocity_recon/ksz_lrg_dr2_20261117/`
   (its `targetid` was rounded through float64: match on `source_row`, as `swap_velocities.py` does)
 - catalogues: `/pscratch/sd/r/rhliu/projects/Weak_lensing/desi/spec_Y3/LRG_catalogues_zeroV_vel_dr2/{official,v_lift_R5}/`
