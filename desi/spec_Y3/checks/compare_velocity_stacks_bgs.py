@@ -6,8 +6,11 @@ official run, so only the velocities differ; velocities zeroed in each cap and z
   v_recsym    Liam Parker's RecSym (BGS share ksz_bgs_dr2_20261119; b = 1.5, f = 0.69, R = 15 Mpc/h);
   v_lift_R5   Liam Parker's LiFT, R = 5 Mpc/h smoothing.
 BGS_BRIGHT-21.35 (the DR2 BAO sample of Liam's share) is a subset of the production BGS_BRIGHT-20.2, so these
-stacks are not the paper's BGS stacks. Bins 1-3 are 0.1-0.2, 0.2-0.3, 0.3-0.4; bin 4 is the whole range 0.1-0.4
-(it overlaps bins 1-3, so the all-bin sums use bins 1-3 only).
+stacks are not the paper's BGS stacks. Bins 1-3 are 0.1-0.2, 0.2-0.3, 0.3-0.4; bin 0 (catalogue z4, named as the
+paper's full-range bin 0) is the whole range 0.1-0.4 (it overlaps bins 1-3, so the all-bin sums use bins 1-3 only).
+With --bin0, bin 0 only, from configs/velocity_dr2/BGS_BRIGHT-21.35_bin0_dsigma_lensing_*.yaml: velocities zeroed per
+cap within each 0.1 sub-range, on the same per-object filtering (the grey production overlay is still the
+paper's DESIY3_BGS: another sample, 0.01 < z < 0.5, whole-range zeroing).
 
 All four runs resample the same objects in each bootstrap realisation (seeded per sample), so the saved samples give
 the covariance of any difference directly.
@@ -27,16 +30,17 @@ Without r_V, A(v_lift_R5 / v_recsym) is expected near 0.560 / 0.591 = 0.948 (Hal
 The object bootstrap underestimates the errors at large apertures (up to x1.35 on the random nulls,
 checks/random_diagnostic.py), so the chi2 are upper bounds and the errors on A lower bounds. Profiles in uK.
 
-Bin 4 caveat: its velocities are zeroed per cap over the whole range only, so per-cap means of up to +-113 km/s
-remain in the sub-ranges (all four sets) and couple to the mean temperature; zeroing them per sub-bin moves the
-bin-4 amplitude ratios (LiFT / official 1.02 -> 0.86, simple template ratio; checks/bgs_bin4_zeroing.py) into line
-with bins 1-3. Read bins 1-3.
+Bin 0 caveat (without --bin0): its velocities are zeroed per cap over the whole range only, so per-cap means of up
+to +-113 km/s remain in the sub-ranges (all four sets) and couple to the mean temperature; zeroing them per sub-bin
+moves the bin-0 amplitude ratios (LiFT / official 1.02 -> 0.86, simple template ratio; checks/bgs_bin4_zeroing.py)
+into line with bins 1-3. Use --bin0 for bin 0.
 In bin 1 the official profile is near zero at small R, so the template ratio A is ill-conditioned there.
 
 Recorded run: 2026-11-19, on the stacks of interactive jobs 61608703 (catalogues, official filtering) and 61611035
-(the other three sets); output in desi/figures/2026-11/11-19/.
+(the other three sets); output in desi/figures/2026-11/11-19/. --bin0: 2026-11-20, on the stacks of interactive job
+61710146; output in desi/figures/2026-11/11-20/, with the default-mode figures rerun there with the "bin 0" label.
 
-Usage: python compare_velocity_stacks_bgs.py [--out DIR]   (login node; writes figures and a summary)
+Usage: python compare_velocity_stacks_bgs.py [--bin0] [--out DIR]   (login node; writes figures and a summary)
 """
 import argparse
 import os
@@ -53,15 +57,16 @@ sys.path.insert(0, '/global/u2/r/rhliu/projects/DESIxHSC-Lensing/src')
 from snr import consistency_test  # noqa: E402
 
 BASE = ('/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing_vel_dr2/'
-        'BGS_BRIGHT-21.35/{vel}/{field}_no_src_with_cluster_mask_zeroV/DESIY3_BGS_z{b}/')
+        'BGS_BRIGHT-21.35{root}/{vel}/{field}_no_src_with_cluster_mask_zeroV/DESIY3_BGS_z{b}/')
 EST = 'DSigma_lensing_ksz_uniformweight'
 VELS = ['official', 'boryana_MG', 'v_recsym', 'v_lift_R5']
 LABEL = {'official': 'DESI official (IFFT)', 'boryana_MG': 'Boryana MG R12.5', 'v_recsym': 'Liam RecSym',
          'v_lift_R5': 'LiFT R5'}
 COLOR = {'official': 'k', 'boryana_MG': 'C0', 'v_recsym': 'C2', 'v_lift_R5': 'C1'}
 BINS = [1, 2, 3, 4]
-INDEP = [1, 2, 3] # bin 4 overlaps bins 1-3
-ZLABEL = {1: '0.1 < z <= 0.2', 2: '0.2 < z <= 0.3', 3: '0.3 < z <= 0.4', 4: '0.1 < z <= 0.4 (all)'}
+INDEP = [1, 2, 3] # bin 0 overlaps bins 1-3
+NAME = {1: 'bin 1', 2: 'bin 2', 3: 'bin 3', 4: 'bin 0'} # bin 0 (catalogue z4): the whole range, as the paper's bin 0
+ZLABEL = {1: '0.1 < z <= 0.2', 2: '0.2 < z <= 0.3', 3: '0.3 < z <= 0.4', 4: '0.1 < z <= 0.4'}
 # plausibility overlay only (different sample, BGS_BRIGHT-20.2 CIGALE; its full-range stack spans 0.01 < z < 0.5)
 PROD = ('/pscratch/sd/r/rhliu/projects/Weak_lensing/ksz_measurements/ACTxDESI/spec_Y3_DSigma_lensing/CIGALE/'
         'full_no_src_with_cluster_mask_zeroV/{name}/')
@@ -81,7 +86,7 @@ def hartlap(n_s: int, n_r: int) -> float:
 
 def load(vel: str, field: str, b: int) -> tuple:
     """Aperture radii [arcmin], profile, bootstrap cov and bootstrap samples of one stack."""
-    d = BASE.format(vel=vel, field=field, b=b)
+    d = BASE.format(root=ROOT, vel=vel, field=field, b=b)
     m = np.loadtxt(d + EST + '_measured.txt')
     return m[:, 0], m[:, 1], np.loadtxt(d + 'cov_' + EST + '_bootstrap.txt'), np.loadtxt(d + EST + '_bootstrap_samples.txt')
 
@@ -117,7 +122,13 @@ parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
 # desi/figures/YYYY-MM/MM-DD/ of the run date (git-ignored)
 FIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'figures', date.today().strftime('%Y-%m/%m-%d'))
 parser.add_argument('--out', default=FIG_DIR, help='Output folder (default: desi/figures/YYYY-MM/MM-DD/).')
+parser.add_argument('--bin0', action='store_true',
+                    help='Bin 0 only, from the stacks zeroed per cap within each 0.1 sub-range (BGS_BRIGHT-21.35_bin0/).')
 args = parser.parse_args()
+ROOT, SUFFIX = ('_bin0', '_bin0') if args.bin0 else ('', '')
+if args.bin0:
+    BINS, INDEP = [4], []
+    ZLABEL = {**ZLABEL, 4: ZLABEL[4] + ', zeroed per cap and 0.1 sub-range'}
 os.makedirs(args.out, exist_ok=True)
 
 data = {(v, f, b): load(v, f, b) for v in VELS for f in FIELDS for b in BINS}
@@ -125,15 +136,16 @@ pair_min = {}
 for (v, f, b), d in data.items():
     r0, _, _, s0 = data['official', f, b]
     if not np.array_equal(d[0], r0) or d[3].shape != (N_BOOT, len(r0)):
-        raise ValueError(f"{v} {f} z{b}: apertures or bootstrap samples differ from the official run")
+        raise ValueError(f"{v} {f} {NAME[b]}: apertures or bootstrap samples differ from the official run")
     # paired resamples: the per-aperture correlation of the samples is far from 0 (an unpaired run gives ~0)
     pair_r = min(np.corrcoef(d[3][:, k], s0[:, k])[0, 1] for k in range(len(r0)))
     if v != 'official':
         pair_min[v, f, b] = pair_r
     if v != 'official' and pair_r < 0.5:
-        raise ValueError(f"{v} {f} z{b}: bootstrap samples look unpaired (min correlation {pair_r:.2f})")
+        raise ValueError(f"{v} {f} {NAME[b]}: bootstrap samples look unpaired (min correlation {pair_r:.2f})")
 
-lines = ["Minimum per-aperture correlation of the bootstrap samples with the official run: "
+lines = [f"Stacks read from {BASE.format(root=ROOT, vel='{vel}', field='{field}', b='{b}')}",
+         "Minimum per-aperture correlation of the bootstrap samples with the official run: "
          + ", ".join(f"{v} {min(r for (w, _, _), r in pair_min.items() if w == v):.2f}" for v in VELS[1:]),
          "Full sky, paired bootstrap: A(x / ref) +- 68% half-width [template-noise bias]; chi2 of x - ref (PTE)"]
 full = {}
@@ -148,10 +160,11 @@ for key, rv in RV.items():
             res = compare(p_ref / rv[ref], s_ref / rv[ref], p_x / rv[x], s_x / rv[x])
             full[key, x, ref, b] = res
             chi2_all += res['chi2'] if b in INDEP else 0.
-            lines.append(f"    BGS z{b} ({ZLABEL[b]}): A = {res['amp']:.3f} +- {res['eamp']:.3f} [{res['bias']:+.3f}]; "
+            lines.append(f"    BGS {NAME[b]} ({ZLABEL[b]}): A = {res['amp']:.3f} +- {res['eamp']:.3f} [{res['bias']:+.3f}]; "
                          f"chi2 = {res['chi2']:.1f} / {len(p_ref)}, PTE = {res['pte']:.3f}")
         dof = len(INDEP) * len(p_ref)
-        lines.append(f"    bins 1-3: chi2 = {chi2_all:.1f} / {dof}, PTE = {stats.chi2.sf(chi2_all, dof):.3f}")
+        if INDEP:
+            lines.append(f"    bins 1-3: chi2 = {chi2_all:.1f} / {dof}, PTE = {stats.chi2.sf(chi2_all, dof):.3f}")
 lines.append("\nexpected A(v_lift_R5 / v_recsym) without r_V: Abacus 0.948, HalfDome 1.014 (Liam's README, centrals)")
 
 lines.append("\nCaps 1. NGC against SGC (chi2 with C_NGC + C_SGC, Hartlap; independent of r_V)")
@@ -163,7 +176,7 @@ for b in BINS:
                                N_BOOT, N_BOOT)
         caps[v, b] = res
         out.append(f"{v}: chi2 = {res['chi2']:.1f}/{res['dof']}, PTE = {res['pte']:.3f}")
-    lines.append(f"  BGS z{b}: " + ';  '.join(out))
+    lines.append(f"  BGS {NAME[b]}: " + ';  '.join(out))
 lines.append("\nCaps 2. change of the cap difference, (NGC - SGC)_x - (NGC - SGC)_official, r_V as above")
 change = {}
 rv = RV['r_V']
@@ -178,18 +191,20 @@ for x in VELS[1:]:
         c, pte = chi2_pte(diff, cov)
         change[x, b] = pte
         chi2_all += c if b in INDEP else 0.
-        out.append(f"z{b} chi2 = {c:.1f}/{len(diff)} (PTE {pte:.3f})")
+        out.append(f"{NAME[b]} chi2 = {c:.1f}/{len(diff)} (PTE {pte:.3f})")
     dof = len(INDEP) * len(diff)
-    lines.append(f"  {x}: " + '; '.join(out) + f"; bins 1-3: chi2 = {chi2_all:.1f}/{dof}, PTE = {stats.chi2.sf(chi2_all, dof):.3f}")
+    tot = f"; bins 1-3: chi2 = {chi2_all:.1f}/{dof}, PTE = {stats.chi2.sf(chi2_all, dof):.3f}" if INDEP else ''
+    lines.append(f"  {x}: " + '; '.join(out) + tot)
 
 summary = '\n'.join(lines)
 print(summary)
-with open(os.path.join(args.out, 'compare_velocity_stacks_bgs.txt'), 'w') as f:
+with open(os.path.join(args.out, f'compare_velocity_stacks_bgs{SUFFIX}.txt'), 'w') as f:
     f.write(__doc__ + '\n' + summary + '\n')
 
 # full sky: profiles / r_V, and each set minus the official one (paired errors)
 rv = RV['r_V']
-fig, axes = plt.subplots(2, 4, figsize=(16, 6.5), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
+fig, axes = plt.subplots(2, len(BINS), figsize=(max(4 * len(BINS), 9), 6.5), sharex=True, gridspec_kw={'height_ratios': [2, 1]},
+                         squeeze=False)
 offsets = dict(zip(VELS, (-0.06, -0.02, 0.02, 0.06)))
 for j, b in enumerate(BINS):
     m = np.loadtxt(PROD.format(name=PROD_NAME[b]) + EST + '_measured.txt')
@@ -204,7 +219,7 @@ for j, b in enumerate(BINS):
             res = full['r_V', v, 'official', b]
             axes[1, j].errorbar(r + offsets[v], res['diff'], res['ediff'], fmt='o', ms=4, capsize=2, color=COLOR[v],
                                 label=f"PTE {res['pte']:.3f}")
-    axes[0, j].set_title(f"BGS-21.35 z{b}, {ZLABEL[b]}")
+    axes[0, j].set_title(f"BGS-21.35 {NAME[b]}, {ZLABEL[b]}")
     for ax in axes[:, j]:
         ax.axhline(0, color='0.6', lw=0.8)
         ax.legend(fontsize=7)
@@ -215,10 +230,11 @@ fig.suptitle("BGS_BRIGHT-21.35, v2 filter (DSigma_lensing); r_V: LiFT 0.560, oth
              " bootstrap errors (lower bounds at large R)", fontsize=11)
 fig.tight_layout()
 for ext in ('png', 'pdf'):
-    fig.savefig(os.path.join(args.out, f'compare_velocity_stacks_bgs.{ext}'), dpi=150)
+    fig.savefig(os.path.join(args.out, f'compare_velocity_stacks_bgs{SUFFIX}.{ext}'), dpi=150)
 
 # caps: NGC - SGC for each set
-fig, axes = plt.subplots(1, 4, figsize=(16, 3.8), sharex=True)
+fig, axes = plt.subplots(1, len(BINS), figsize=(max(4 * len(BINS), 9), 3.8), sharex=True, squeeze=False)
+axes = axes[0]
 for j, b in enumerate(BINS):
     for v in VELS:
         r = data[v, 'NGC', b][0]
@@ -228,12 +244,12 @@ for j, b in enumerate(BINS):
         axes[j].errorbar(r + offsets[v], d, e, fmt='o', ms=4, capsize=2, color=COLOR[v],
                          label=f"{LABEL[v]}: PTE {caps[v, b]['pte']:.3f}{chg}")
     axes[j].axhline(0, color='0.6', lw=0.8)
-    axes[j].set_title(f"BGS-21.35 z{b}, {ZLABEL[b]}")
+    axes[j].set_title(f"BGS-21.35 {NAME[b]}, {ZLABEL[b]}")
     axes[j].set_xlabel(r'$R$ [arcmin]')
     axes[j].legend(fontsize=6.5)
 axes[0].set_ylabel('NGC $-$ SGC, / $r_V$ [$\\mu$K]\n(correlated across $R$ and sets)')
 fig.suptitle("NGC against SGC (consistency test), v2 filter (DSigma_lensing), BGS_BRIGHT-21.35", fontsize=11)
 fig.tight_layout()
 for ext in ('png', 'pdf'):
-    fig.savefig(os.path.join(args.out, f'compare_velocity_caps_bgs.{ext}'), dpi=150)
+    fig.savefig(os.path.join(args.out, f'compare_velocity_caps_bgs{SUFFIX}.{ext}'), dpi=150)
 print(f"wrote {args.out}")
